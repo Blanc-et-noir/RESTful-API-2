@@ -7,7 +7,7 @@
 		WHERE user_id = #{user_id}
 	</select>
 	
-	<select id="getUserTokensByUserId" parameterType="java.util.HashMap">
+	<select id="getUserTokensByUserId" parameterType="java.util.HashMap" resultType="java.util.HashMap">
 		SELECT user_accesstoken, user_refreshtoken
 		FROM users
 		WHERE user_id = #{user_id}

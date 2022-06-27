@@ -47,8 +47,10 @@ public class RefreshtokenInterceptor implements HandlerInterceptor{
 		String user_refreshtoken = JwtUtil.getRefreshtoken(request);
 		String uri = request.getRequestURI();
 		String method = request.getMethod();
-
-		System.out.println("리프");
+		
+		if(method.equalsIgnoreCase("OPTIONS")) {
+			return true;
+		}
 		
 		if(uri.endsWith("/")) {
 			uri = uri.substring(0,uri.length()-1);
@@ -61,22 +63,22 @@ public class RefreshtokenInterceptor implements HandlerInterceptor{
 		
 		//2. 리프레쉬 토큰이 필요하나 리프레쉬 토큰이 없는 경우에는, UNAUTHORIZED 응답.
 		if(user_refreshtoken == null) {
-			setErrorMessage(response,401,"로그인 정보가 유효하지 않음");
+			setErrorMessage(response,401,"리프레쉬 토큰이 존재하지 않습니다.");
 			return false;
 		//3. 액세스 토큰이 필요하나 액세스 토큰이 없는 경우에는, UNAUTHORIZED 응답.
 		}else if(user_accesstoken==null) {
-			setErrorMessage(response,401,"로그인 정보가 유효하지 않음");
+			setErrorMessage(response,401,"액세스 토큰이 존재하지 않습니다.");
 			return false;
 		}else {
 			//4. Redis의 블랙리스트에 존재하는 리프레쉬 토큰일 경우에는 정상적으로 로그아웃 처리된 토큰이므로 UNAUTHORIZED 응답.
 			if(RedisUtil.getData(user_refreshtoken)!=null) {
-				setErrorMessage(response,401,"로그인 정보가 유효하지 않음");
+				setErrorMessage(response,401,"해당 리프레쉬 토큰은 이미 로그아웃 처리되었습니다.");
 				return false;
 			}
 			
 			//5. Redis의 블랙리스트에 존재하는 액세스 토큰일 경우에는 정상적으로 로그아웃 처리된 토큰이므로 UNAUTHORIZED 응답.
 			if(RedisUtil.getData(user_accesstoken)!=null) {
-				setErrorMessage(response,401,"로그인 정보가 유효하지 않음");
+				setErrorMessage(response,401,"해당 액세스 토큰은 이미 로그아웃 처리되었습니다.");
 				return false;
 			}
 			
@@ -87,7 +89,7 @@ public class RefreshtokenInterceptor implements HandlerInterceptor{
 
 			//7. 액세스 토큰이 위조된 경우 UNAUTHORIZED 응답.
 			}catch(Exception e) {
-				setErrorMessage(response,401,"로그인 정보가 유효하지 않음");
+				setErrorMessage(response,401,"해당 액세스 토큰은 위조되었습니다.");
 				return false;
 			}
 			
@@ -96,11 +98,11 @@ public class RefreshtokenInterceptor implements HandlerInterceptor{
 				JwtUtil.validateToken(user_refreshtoken);
 				
 				//9. 액세스 토큰과 리프레쉬 토큰의 주인이 일치하는지 확인함.
-				String access_user_id = JwtUtil.getData(user_accesstoken, "user_id");
-				String refresh_user_id = JwtUtil.getData(user_refreshtoken, "user_id");
+				String access_user_id = (String)JwtUtil.getData(user_accesstoken, "user_id");
+				String refresh_user_id = (String)JwtUtil.getData(user_refreshtoken, "user_id");
 
 				if(!access_user_id.equals(refresh_user_id)) {
-					setErrorMessage(response,401,"로그인 정보가 유효하지 않음");
+					setErrorMessage(response,401,"액세스 토큰 및 리프레쉬 토큰 발급자 정보가 일치하지 않습니다.");
 					return false;
 				}
 				
@@ -111,17 +113,17 @@ public class RefreshtokenInterceptor implements HandlerInterceptor{
 				
 				//11. 해당 사용자가 사용하던 액세스, 리프레쉬 토큰이 아닌경우 UNAUTHORIZED 응답.
 				if(!user_accesstoken.equals(tokens.get("user_accesstoken"))||!user_refreshtoken.equals(tokens.get("user_refreshtoken"))) {
-					setErrorMessage(response,401,"로그인 정보가 유효하지 않음");
+					setErrorMessage(response,401,"액세스 토큰 또는 리프레쉬 토큰은 해당 사용자가 현재 사용중인 것이 아닙니다.");
 					return false;
 				}
 				return true;
 			//12. 리프레쉬 토큰의 유효기간이 지난 경우 UNAUTHORIZED 응답.
 			}catch(ExpiredJwtException e) {
-				setErrorMessage(response,401,"로그인 정보가 유효하지 않음");
+				setErrorMessage(response,401,"해당 리프레쉬 토큰은 기한이 만료되었습니다.");
 				return false;
 			//13. 리프레쉬 토큰이 위조된 경우 UNAUTHORIZED 응답.
 			}catch(Exception e) {
-				setErrorMessage(response,401,"로그인 정보가 유효하지 않음");
+				setErrorMessage(response,401,"해당 리프레쉬 토큰은 위조되었습니다.");
 				return false;
 			}
 		}

@@ -2,6 +2,8 @@ package com.spring.api.service;
 
 import java.util.HashMap;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,12 +14,15 @@ import com.spring.api.encrypt.SHA;
 import com.spring.api.exception.users.DuplicateUserIdException;
 import com.spring.api.exception.users.DuplicateUserPhoneException;
 import com.spring.api.exception.users.InvalidPublicKeyException;
+import com.spring.api.exception.users.NotAuthorizedException;
+import com.spring.api.exception.users.NotFoundUserException;
 import com.spring.api.exception.users.QuestionAnswerExceededLimitOnMaxbytesException;
 import com.spring.api.exception.users.UUIDNotMatchedToRegexException;
 import com.spring.api.exception.users.UserIdNotMatchedToRegexException;
 import com.spring.api.exception.users.UserNameNotMatchedToRegexException;
 import com.spring.api.exception.users.UserPhoneNotMatchedToRegexException;
 import com.spring.api.exception.users.UserPwNotMatchedToRegexException;
+import com.spring.api.util.JwtUtil;
 import com.spring.api.util.RedisUtil;
 import com.spring.api.util.RegexUtil;
 
@@ -31,6 +36,7 @@ import com.spring.api.util.RegexUtil;
 		DuplicateUserPhoneException.class,
 		UUIDNotMatchedToRegexException.class,
 		QuestionAnswerExceededLimitOnMaxbytesException.class,
+		NotFoundUserException.class,
 		Exception.class
 	}
 )
@@ -153,9 +159,35 @@ public class UserServiceImpl implements UserService{
 	}
 
 	@Override
-	public HashMap readUserInfo(HashMap<String,String> param) {
-		// TODO Auto-generated method stub
-		return null;
+	public HashMap readUserInfo(HttpServletRequest request, String target_user_id) throws NotFoundUserException,NotAuthorizedException, Exception {
+		String user_accesstoken = JwtUtil.getAccesstoken(request);
+		String jwt_user_id = (String)JwtUtil.getData(user_accesstoken, "user_id");
+		
+		HashMap param = new HashMap();
+		param.put("user_id", target_user_id);
+		
+		HashMap user = userDAO.findUserInfoByUserId(param);
+		
+		if(user==null) {
+			throw new NotFoundUserException();
+		}
+		
+		int user_type_id = (Integer)JwtUtil.getData(user_accesstoken, "user_type_id");
+		
+		if(user_type_id!=0&&!target_user_id.equals(jwt_user_id)) {
+			throw new NotAuthorizedException();
+		}
+		
+		param = new HashMap();
+		param.put("user_id", target_user_id);
+		
+		user = userDAO.readUserInfo(param);
+		
+		if(user == null) {
+			throw new NotFoundUserException();
+		}
+		
+		return user;
 	}
 
 	@Override

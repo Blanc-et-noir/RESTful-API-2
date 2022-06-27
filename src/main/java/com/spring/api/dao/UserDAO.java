@@ -19,4 +19,7 @@ public class UserDAO {
 	public int createNewUserInfo(HashMap param) {
 		return sqlSession.insert("users.createNewUserInfo", param);
 	}
+	public HashMap<String, String> readUserInfo(HashMap param) {
+		return sqlSession.selectOne("users.readUserInfo", param);
+	}
 }

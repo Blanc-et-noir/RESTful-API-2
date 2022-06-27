@@ -11,10 +11,15 @@
 		FROM users
 		WHERE user_phone = #{user_phone}
 	</select>
+	<select id="readUserInfo" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT user_id, user_name, user_point, user_type_id, user_type_content, checkout_date
+		FROM users NATURAL JOIN user_types
+		WHERE user_id = #{user_id}
+	</select>
 	<insert id="createNewUserInfo" parameterType="java.util.HashMap">
 		INSERT INTO users(user_id, user_pw, user_name, user_phone, question_id, question_answer, user_salt, user_point, user_type_id, checkout_date)
 		VALUES(
-			#{user_id}, #{user_pw}, #{user_name}, #{user_phone}, #{question_id}, #{question_answer}, #{user_salt}, 10, 0, DATE_FORMAT(NOW(),'%Y-%m-%d %T')
+			#{user_id}, #{user_pw}, #{user_name}, #{user_phone}, #{question_id}, #{question_answer}, #{user_salt}, 10, 1, DATE_FORMAT(NOW(),'%Y-%m-%d %T')
 		)
 	</insert>
 </mapper>
