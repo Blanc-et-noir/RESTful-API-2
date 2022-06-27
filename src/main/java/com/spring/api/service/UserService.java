@@ -2,9 +2,13 @@ package com.spring.api.service;
 
 import java.util.HashMap;
 
+import javax.servlet.http.HttpServletRequest;
+
 import com.spring.api.exception.users.DuplicateUserIdException;
 import com.spring.api.exception.users.DuplicateUserPhoneException;
 import com.spring.api.exception.users.InvalidPublicKeyException;
+import com.spring.api.exception.users.NotAuthorizedException;
+import com.spring.api.exception.users.NotFoundUserException;
 import com.spring.api.exception.users.QuestionAnswerExceededLimitOnMaxbytesException;
 import com.spring.api.exception.users.UUIDNotMatchedToRegexException;
 import com.spring.api.exception.users.UserIdNotMatchedToRegexException;
@@ -26,7 +30,11 @@ public interface UserService {
 	QuestionAnswerExceededLimitOnMaxbytesException,
 	Exception;
 	
-	public HashMap readUserInfo(HashMap<String,String> param);
+	public HashMap readUserInfo(HttpServletRequest request, String target_user_id) throws
+	NotFoundUserException,
+	NotAuthorizedException,
+	Exception ;
+	
 	public void updateUserInfo(HashMap<String,String> param);
 	public void deleteUserInfo(HashMap<String,String> param);
 	public String createNewUserKeys() throws Exception;

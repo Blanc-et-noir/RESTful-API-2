@@ -2,10 +2,12 @@ package com.spring.api.controller;
 
 import java.util.HashMap;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -14,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.spring.api.exception.users.DuplicateUserIdException;
 import com.spring.api.exception.users.DuplicateUserPhoneException;
 import com.spring.api.exception.users.InvalidPublicKeyException;
+import com.spring.api.exception.users.NotAuthorizedException;
+import com.spring.api.exception.users.NotFoundUserException;
 import com.spring.api.exception.users.QuestionAnswerExceededLimitOnMaxbytesException;
 import com.spring.api.exception.users.UUIDNotMatchedToRegexException;
 import com.spring.api.exception.users.UserIdNotMatchedToRegexException;
@@ -22,7 +26,6 @@ import com.spring.api.exception.users.UserPhoneNotMatchedToRegexException;
 import com.spring.api.exception.users.UserPwNotMatchedToRegexException;
 import com.spring.api.service.UserService;
 
-//@CrossOrigin
 @RestController("userController")
 public class UserController {
 	@Autowired
@@ -94,18 +97,42 @@ public class UserController {
 		}
 	}
 	
-	@RequestMapping(value="/users",method=RequestMethod.GET)
-	public ResponseEntity<HashMap> readUserInfo(@RequestParam HashMap param) {
+	@RequestMapping(value="/users/{user_id}",method=RequestMethod.GET)
+	public ResponseEntity<HashMap> readUserInfo(HttpServletRequest request, @PathVariable(value="user_id") String user_id) {
 		HashMap result = new HashMap();
 		try {
-			userService.readUserInfo(param);
+			HashMap user = userService.readUserInfo(request, user_id);
+			result.put("user", user);
 			result.put("flag", true);
-			result.put("content", "정보조회 성공");
+			result.put("content", "회원정보 조회에 성공했습니다.");
 			return new ResponseEntity<HashMap>(result,HttpStatus.OK);
+		}catch(NotFoundUserException e) {
+			result.put("flag", false);
+			result.put("content", e.getMessage());
+			return new ResponseEntity<HashMap>(result,HttpStatus.BAD_REQUEST);
+		}catch(NotAuthorizedException e) {
+			result.put("flag", false);
+			result.put("content", e.getMessage());
+			return new ResponseEntity<HashMap>(result,HttpStatus.FORBIDDEN);
 		}catch(Exception e) {
 			e.printStackTrace();
 			result.put("flag", false);
 			result.put("content", "정보조회 실패");
+			return new ResponseEntity<HashMap>(result,HttpStatus.BAD_REQUEST);
+		}
+	}
+	
+	@RequestMapping(value="/users",method= {RequestMethod.DELETE})
+	public ResponseEntity<HashMap> deleteUserInfo(@RequestParam HashMap param) {
+		HashMap result = new HashMap();
+		try {
+			result.put("flag", true);
+			result.put("content", "정보삭제 성공");
+			return new ResponseEntity<HashMap>(result,HttpStatus.OK);
+		}catch(Exception e) {
+			e.printStackTrace();
+			result.put("flag", false);
+			result.put("content", "정보삭제 실패");
 			return new ResponseEntity<HashMap>(result,HttpStatus.BAD_REQUEST);
 		}
 	}

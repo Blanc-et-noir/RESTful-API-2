@@ -44,7 +44,11 @@ public class AccesstokenInterceptor implements HandlerInterceptor{
 		if(uri.endsWith("/")) {
 			uri = uri.substring(0,uri.length()-1);
 		}
-
+		
+		if(method.equalsIgnoreCase("OPTIONS")) {
+			return true;
+		}
+		
 		//1. 신규 회원가입 요청시에는 액세스 토큰이 필요없음.
 		if(uri.equals("/api/users")&&method.equalsIgnoreCase("POST")){
 			return true;
@@ -55,13 +59,13 @@ public class AccesstokenInterceptor implements HandlerInterceptor{
 		
 		//3. 액세스 토큰이 필요하나 액세스 토큰이 없는 경우에는, UNAUTHORIZED 응답.
 		if(user_accesstoken==null) {
-			setErrorMessage(response,401,"로그인 정보가 유효하지 않음");
+			setErrorMessage(response,401,"액세스 토큰이 존재하지 않습니다.");
 			return false;
 		//4. 액세스 토큰이 필요하고, 액세스 토큰이 있는 경우에는 아래의 처리로직을 수행함.
 		}else {
 			//5. Redis의 블랙리스트에 존재하는 액세스 토큰일 경우에는 정상적으로 로그아웃 처리된 토큰이므로 UNAUTHORIZED 응답.
 			if(RedisUtil.getData(user_accesstoken)!=null) {
-				setErrorMessage(response,401,"로그인 정보가 유효하지 않음");
+				setErrorMessage(response,401,"해당 액세스 토큰은 이미 로그아웃 처리되었습니다.");
 				return false;
 			}
 			
@@ -71,11 +75,12 @@ public class AccesstokenInterceptor implements HandlerInterceptor{
 				return true;
 			//7. 액세스 토큰의 유효기간이 지난 경우 UNAUTHORIZED 응답.
 			}catch(ExpiredJwtException e) {
-				setErrorMessage(response,401,"로그인 정보가 유효하지 않음");
+				setErrorMessage(response,401,"해당 액세스 토큰은 기한이 만료되었습니다.");
 				return false;
 			//8. 액세스 토큰이 위조된 경우 UNAUTHORIZED 응답.
 			}catch(Exception e) {
-				setErrorMessage(response,401,"로그인 정보가 유효하지 않음");
+				e.printStackTrace();
+				setErrorMessage(response,401,"해당 액세스 토큰은 위조되었습니다.");
 				return false;
 			}
 		}

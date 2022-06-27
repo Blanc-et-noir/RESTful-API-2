@@ -1,7 +1,7 @@
 package com.spring.api.vo;
 
 public class UserVO {
-	private String user_id, user_name, user_phone, question_id;
+	private String user_id, user_name, user_phone, question_id,user_type_content;
 	private int user_point,user_type_id;
 	
 	public UserVO(){
@@ -43,5 +43,11 @@ public class UserVO {
 	}
 	public void setUser_type_id(int user_type_id) {
 		this.user_type_id = user_type_id;
+	}
+	public String getUser_type_content() {
+		return user_type_content;
+	}
+	public void setUser_type_content(String user_type_content) {
+		this.user_type_content = user_type_content;
 	}
 }

@@ -22,7 +22,6 @@ import com.spring.api.exception.users.UserPwNotMatchedToRegexException;
 import com.spring.api.service.TokenService;
 import com.spring.api.util.JwtUtil;
 
-//@CrossOrigin
 @RestController("tokenController")
 public class TokenController {
 	@Autowired

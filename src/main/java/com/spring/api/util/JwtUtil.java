@@ -21,13 +21,11 @@ import io.jsonwebtoken.SignatureAlgorithm;
 
 @Component
 public class JwtUtil {
-	//임시로 비밀키를 하드코딩하였으나 추후 변경예정
 	private static String privatekey;
 	
 	public static final long refreshtokenMaxAge = 14*24*60*60*1000;
-	//public static final long accesstokenMaxAge = 1*60*60*1000;
-	public static final long accesstokenMaxAge = 20*1000;
-	public static final int privateKeyMaxAge = 1*60*1000;
+	public static final long accesstokenMaxAge = 2*60*60*1000;
+	public static final int privateKeyMaxAge = 3*60*1000;
 	
 	@Value("${jwt.privatekey}")
 	public void setPrivatekey(String privatekey) {
@@ -104,16 +102,16 @@ public class JwtUtil {
     }
     
     //클라이언트로부터 전달받은 해당 토큰에 저장된 정보를 얻음.
-    public static String getData(String token, String data){
+    public static Object getData(String token, String data){
     	String secretKey = Base64.getEncoder().encodeToString(privatekey.getBytes());
     	
     	//1. 해당 JWT 토큰으로부터 저장된 정보를 얻음.
     	try {
     		Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
-    		return (String) claims.getBody().get(data);
+    		return claims.getBody().get(data);
     	//2. 해당 JWT 토큰의 유효기간이 지났어도 저장된 정보를 얻음.
     	}catch(ExpiredJwtException e) {
-    		return (String) e.getClaims().get(data);
+    		return e.getClaims().get(data);
     	//3. 기타 예외가 발생한 경우.
     	}catch(Exception e) {
     		return null;

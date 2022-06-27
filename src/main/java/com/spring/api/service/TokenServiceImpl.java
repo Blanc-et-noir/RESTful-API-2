@@ -55,7 +55,7 @@ public class TokenServiceImpl implements TokenService{
 		}
 		
 		user_pw = RSA2048.decrypt(user_pw, user_privatekey);
-		HashMap<String,String> user = null;
+		HashMap<String,Object> user = null;
 		
 		//1. 아이디가 정규식에 적합하다면 실제로 존재하는 아이디인지 확인, 없으면 예외
 		if(RegexUtil.checkRegex(user_id, RegexUtil.USER_ID_REGEX)) {
@@ -71,7 +71,7 @@ public class TokenServiceImpl implements TokenService{
 		if(!RegexUtil.checkRegex(user_pw, RegexUtil.USER_PW_REGEX)) {
 			throw new UserPwNotMatchedToRegexException();
 		}else {
-			user_pw = SHA.DSHA512(user_pw, user.get("user_salt"));
+			user_pw = SHA.DSHA512(user_pw, (String)user.get("user_salt"));
 			if(!user_pw.equals(user.get("user_pw"))) {
 				throw new UserPwNotMatchedException();
 			}
@@ -80,7 +80,9 @@ public class TokenServiceImpl implements TokenService{
 		//3. 존재하는 아이디, 올바른 비밀번호라면 토큰을 생성후 반환
 		UserVO userVo = new UserVO();
 		userVo.setUser_id(user_id);
-		userVo.setUser_name(user.get("user_name"));
+		userVo.setUser_name((String)user.get("user_name"));
+		userVo.setUser_type_id((Integer)user.get("user_type_id"));
+		userVo.setUser_type_content((String)user.get("user_type_content"));
 		
 		String user_accesstoken = JwtUtil.createToken(userVo, JwtUtil.accesstokenMaxAge);
 		String user_refreshtoken = JwtUtil.createToken(userVo, JwtUtil.refreshtokenMaxAge);
@@ -110,7 +112,7 @@ public class TokenServiceImpl implements TokenService{
 		String user_refreshtoken = JwtUtil.getRefreshtoken(request);
 
 		//2. 해당 사용자의 ID를 활용해 새로운 액세스, 리프레쉬 토큰을 발급함.
-		String user_id = JwtUtil.getData(user_accesstoken, "user_id");
+		String user_id = (String)JwtUtil.getData(user_accesstoken, "user_id");
 		UserVO user = new UserVO();
 		user.setUser_id(user_id);
 
