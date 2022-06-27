@@ -37,7 +37,7 @@ public class TokenController {
 			JwtUtil.setRefreshtoken(response, tokens.get("user_refreshtoken"));
 			
 			result.put("flag", true);
-			result.put("content", "토큰발급 성공");
+			result.put("content", "로그인에 성공했습니다.");
 			return new ResponseEntity<HashMap>(result,HttpStatus.CREATED);
 		}catch(InvalidPublicKeyException e) {
 			result.put("flag", false);
@@ -62,7 +62,7 @@ public class TokenController {
 		}catch(Exception e) {
 			e.printStackTrace();
 			result.put("flag", false);
-			result.put("content", "토큰발급 실패");
+			result.put("content", "로그인에 실패했습니다.");
 			return new ResponseEntity<HashMap>(result,HttpStatus.BAD_REQUEST);
 		}
 	}
@@ -70,7 +70,6 @@ public class TokenController {
 	@RequestMapping(value = "/tokens",method = RequestMethod.PUT)
 	public ResponseEntity<HashMap> updateTokens(HttpServletRequest request, HttpServletResponse response) {
 		HashMap result = new HashMap();
-		System.out.println(JwtUtil.getData(JwtUtil.getAccesstoken(request), "user_id"));
 		try {
 			HashMap<String,String> tokens = tokenService.updateTokens(request);
 			
@@ -81,12 +80,12 @@ public class TokenController {
 			JwtUtil.setRefreshtoken(response, user_refreshtoken);
 			
 			result.put("flag", true);
-			result.put("content", "토큰갱신 성공");
+			result.put("content", "액세스 및 리프레쉬 토큰 갱신에 성공했습니다.");
 			return new ResponseEntity<HashMap>(result,HttpStatus.OK);
 		}catch(Exception e) {
 			e.printStackTrace();
 			result.put("flag", false);
-			result.put("content", "토큰갱신 실패");
+			result.put("content", "액세스 및 리프레쉬 토큰 갱신에 실패했습니다.");
 			return new ResponseEntity<HashMap>(result,HttpStatus.BAD_REQUEST);
 		}
 	}
@@ -97,12 +96,12 @@ public class TokenController {
 		try {
 			tokenService.deleteTokens(request);
 			result.put("flag", true);
-			result.put("content", "토큰삭제 성공");
+			result.put("content", "로그아웃에 성공했습니다.");
 			return new ResponseEntity<HashMap>(result,HttpStatus.OK);
 		}catch(Exception e) {
 			e.printStackTrace();
 			result.put("flag", false);
-			result.put("content", "토큰삭제 실패");
+			result.put("content", "로그아웃에 실패했습니다.");
 			return new ResponseEntity<HashMap>(result,HttpStatus.BAD_REQUEST);
 		}
 	}
