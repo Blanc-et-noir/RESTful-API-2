@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/mvc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/mvc
+		https://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/beans
+		https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context
+		https://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/aop
+		http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+	<!-- DispatcherServlet Context: defines this servlet's request-processing infrastructure -->
+	
+	<!-- Enables the Spring MVC @Controller programming model -->
+	<annotation-driven />
+
+	<!-- Handles HTTP GET requests for /resources/** by efficiently serving up static resources in the ${webappRoot}/resources directory -->
+	<resources mapping="/resources/**" location="/resources/" />
+
+	<!-- Resolves views selected for rendering by @Controllers to .jsp resources in the /WEB-INF/views directory -->
+	<beans:bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<beans:property name="prefix" value="/WEB-INF/views/" />
+		<beans:property name="suffix" value=".jsp" />
+	</beans:bean>
+
+	<beans:bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<beans:property name="maxUploadSize" value="52428800"/>
+		<beans:property name="maxInMemorySize" value="1000000"/>
+		<beans:property name="defaultEncoding" value="utf-8"/>
+	</beans:bean>
+	
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/**/*"/>
+			<mvc:exclude-mapping path="/tokens/**"/>
+			<beans:bean class="com.spring.api.interceptor.AccesstokenInterceptor"/>
+		</mvc:interceptor>
+		<mvc:interceptor>
+			<mvc:mapping path="/tokens/**"/>
+			<beans:bean class="com.spring.api.interceptor.RefreshtokenInterceptor"/>
+		</mvc:interceptor>
+	</mvc:interceptors>
+	
+	<mvc:cors>
+		<mvc:mapping path="/**" allowed-origins="*" allowed-methods="GET, PUT, DELETE, POST" allow-credentials="false" />
+	</mvc:cors>
+	
+	<context:component-scan base-package="com.spring.api" />
+	<mvc:annotation-driven />
+	<aop:aspectj-autoproxy></aop:aspectj-autoproxy>
+	
+	<context:property-placeholder location="classpath:config/jdbc/jdbc.properties,classpath:config/redis/redis.properties,classpath:config/jwt/jwt.properties"/>
+	
+	<beans:bean id="jedisConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory" p:usePool="${redis.usePool}" p:hostName="${redis.hostName}" p:port="${redis.port}" p:password="${redis.password}"/>
+	<beans:bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate" p:connectionFactory-ref="jedisConnectionFactory" />
+</beans:beans>
