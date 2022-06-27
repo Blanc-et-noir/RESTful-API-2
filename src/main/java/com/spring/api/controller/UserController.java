@@ -36,12 +36,12 @@ public class UserController {
 		HashMap result = new HashMap();
 		try {
 			result.put("flag", true);
-			result.put("content", "공개키 발급 성공");
+			result.put("content", "공개키 발급에 성공했습니다.");
 			result.put("user_publickey", userService.createNewUserKeys());
 			return new ResponseEntity<HashMap>(result,HttpStatus.OK);
 		}catch(Exception e) {
 			result.put("flag", false);
-			result.put("content", "공개키 발급 실패");
+			result.put("content", "공개키 발급에 실패했습니다.");
 			return new ResponseEntity<HashMap>(result,HttpStatus.BAD_REQUEST);
 		}
 	}
@@ -52,7 +52,7 @@ public class UserController {
 		try {
 			userService.createNewUserInfo(param);
 			result.put("flag", true);
-			result.put("content", "회원가입 성공");
+			result.put("content", "회원가입에 성공했습니다.");
 			return new ResponseEntity<HashMap>(result,HttpStatus.CREATED);
 		}catch(InvalidPublicKeyException e) {
 			result.put("flag", false);
@@ -92,7 +92,7 @@ public class UserController {
 			return new ResponseEntity<HashMap>(result,HttpStatus.BAD_REQUEST);
 		}catch(Exception e) {
 			result.put("flag", false);
-			result.put("content", "회원가입 실패");
+			result.put("content", "회원가입에 실패했습니다.");
 			return new ResponseEntity<HashMap>(result,HttpStatus.BAD_REQUEST);
 		}
 	}
@@ -117,7 +117,7 @@ public class UserController {
 		}catch(Exception e) {
 			e.printStackTrace();
 			result.put("flag", false);
-			result.put("content", "정보조회 실패");
+			result.put("content", "회원정보 조회에 실패했습니다.");
 			return new ResponseEntity<HashMap>(result,HttpStatus.BAD_REQUEST);
 		}
 	}
@@ -127,12 +127,12 @@ public class UserController {
 		HashMap result = new HashMap();
 		try {
 			result.put("flag", true);
-			result.put("content", "정보삭제 성공");
+			result.put("content", "회원탈퇴에 성공했습니다.");
 			return new ResponseEntity<HashMap>(result,HttpStatus.OK);
 		}catch(Exception e) {
 			e.printStackTrace();
 			result.put("flag", false);
-			result.put("content", "정보삭제 실패");
+			result.put("content", "회원탈퇴에 실패했습니다.");
 			return new ResponseEntity<HashMap>(result,HttpStatus.BAD_REQUEST);
 		}
 	}
