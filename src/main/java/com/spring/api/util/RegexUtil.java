@@ -8,7 +8,7 @@ public class RegexUtil {
 	public final static String USER_PW_REGEX = "[a-zA-Z0-9_]{8,16}$";
 	public final static String USER_PHONE_REGEX = "\\d{3}-\\d{4}-\\d{4}";
 	public final static String UUID_REGEX = "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}";
-	public final static String USER_NAME_REGEX = "^[¡Æ¢®-¨¡R]{2,4}$";
+	public final static String USER_NAME_REGEX = "^[°¡-ÆR]{2,4}$";
 	public final static int QUESTION_ANSWER_MAXBYTES = 512;
 	
 	

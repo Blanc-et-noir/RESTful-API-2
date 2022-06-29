@@ -38,7 +38,7 @@
 	
 	<mvc:interceptors>
 		<mvc:interceptor>
-			<mvc:mapping path="/**/*"/>
+			<mvc:mapping path="/**"/>
 			<mvc:exclude-mapping path="/tokens/**"/>
 			<beans:bean class="com.spring.api.interceptor.AccesstokenInterceptor"/>
 		</mvc:interceptor>
@@ -58,7 +58,7 @@
 	<mvc:cors>
     	<mvc:mapping path="/**"
         allowed-origins="*"
-        allowed-methods="GET, PUT, POST"
+        allowed-methods="GET, PUT, POST, DELETE"
         max-age="3600" />
 	</mvc:cors>
 	

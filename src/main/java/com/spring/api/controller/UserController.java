@@ -18,12 +18,14 @@ import com.spring.api.exception.users.DuplicateUserPhoneException;
 import com.spring.api.exception.users.InvalidPublicKeyException;
 import com.spring.api.exception.users.NotAuthorizedException;
 import com.spring.api.exception.users.NotFoundUserException;
+import com.spring.api.exception.users.NotchangeableUserSaltException;
 import com.spring.api.exception.users.QuestionAnswerExceededLimitOnMaxbytesException;
 import com.spring.api.exception.users.UUIDNotMatchedToRegexException;
 import com.spring.api.exception.users.UserIdNotMatchedToRegexException;
 import com.spring.api.exception.users.UserNameNotMatchedToRegexException;
 import com.spring.api.exception.users.UserPhoneNotMatchedToRegexException;
 import com.spring.api.exception.users.UserPwNotMatchedToRegexException;
+import com.spring.api.exception.users.UserQuestionAnswerNotMatchedException;
 import com.spring.api.service.UserService;
 
 @RestController("userController")
@@ -122,7 +124,68 @@ public class UserController {
 		}
 	}
 	
-	@RequestMapping(value="/users",method= {RequestMethod.DELETE})
+	@RequestMapping(value="/users/{user_id}",method={RequestMethod.PUT})
+	public ResponseEntity<HashMap> updateUserInfo(HttpServletRequest request, @RequestParam HashMap param, @PathVariable("user_id") String target_user_id) {
+		HashMap result = new HashMap();
+		try {
+			param.put("user_id", target_user_id);
+			userService.updateUserInfo(request, param);
+			result.put("flag", true);
+			result.put("content", "회원정보 변경에 성공했습니다.");
+			return new ResponseEntity<HashMap>(result,HttpStatus.OK);
+		}catch(InvalidPublicKeyException e) {
+			result.put("flag", false);
+			result.put("content", e.getMessage());
+			return new ResponseEntity<HashMap>(result,HttpStatus.BAD_REQUEST);
+		}catch(NotFoundUserException e) {
+			result.put("flag", false);
+			result.put("content", e.getMessage());
+			return new ResponseEntity<HashMap>(result,HttpStatus.BAD_REQUEST);
+		}catch(NotAuthorizedException e) {
+			result.put("flag", false);
+			result.put("content", e.getMessage());
+			return new ResponseEntity<HashMap>(result,HttpStatus.FORBIDDEN);
+		}catch(UserQuestionAnswerNotMatchedException e) {
+			result.put("flag", false);
+			result.put("content", e.getMessage());
+			return new ResponseEntity<HashMap>(result,HttpStatus.BAD_REQUEST);
+		}catch(UserNameNotMatchedToRegexException e) {
+			result.put("flag", false);
+			result.put("content", e.getMessage());
+			return new ResponseEntity<HashMap>(result,HttpStatus.BAD_REQUEST);
+		}catch(UserPwNotMatchedToRegexException e) {
+			result.put("flag", false);
+			result.put("content", e.getMessage());
+			return new ResponseEntity<HashMap>(result,HttpStatus.BAD_REQUEST);
+		}catch(UUIDNotMatchedToRegexException e) {
+			result.put("flag", false);
+			result.put("content", e.getMessage());
+			return new ResponseEntity<HashMap>(result,HttpStatus.BAD_REQUEST);
+		}catch(QuestionAnswerExceededLimitOnMaxbytesException e) {
+			result.put("flag", false);
+			result.put("content", e.getMessage());
+			return new ResponseEntity<HashMap>(result,HttpStatus.BAD_REQUEST);
+		}catch(DuplicateUserPhoneException e) {
+			result.put("flag", false);
+			result.put("content", e.getMessage());
+			return new ResponseEntity<HashMap>(result,HttpStatus.BAD_REQUEST);
+		}catch(UserPhoneNotMatchedToRegexException e) {
+			result.put("flag", false);
+			result.put("content", e.getMessage());
+			return new ResponseEntity<HashMap>(result,HttpStatus.BAD_REQUEST);
+		}catch(NotchangeableUserSaltException e) {
+			result.put("flag", false);
+			result.put("content", e.getMessage());
+			return new ResponseEntity<HashMap>(result,HttpStatus.BAD_REQUEST);
+		}catch(Exception e) {
+			e.printStackTrace();
+			result.put("flag", false);
+			result.put("content", "회원정보 변경에 실패했습니다.");
+			return new ResponseEntity<HashMap>(result,HttpStatus.BAD_REQUEST);
+		}
+	}
+	
+	@RequestMapping(value="/users",method={RequestMethod.DELETE})
 	public ResponseEntity<HashMap> deleteUserInfo(@RequestParam HashMap param) {
 		HashMap result = new HashMap();
 		try {

@@ -22,4 +22,10 @@ public class UserDAO {
 	public HashMap<String, String> readUserInfo(HashMap param) {
 		return sqlSession.selectOne("users.readUserInfo", param);
 	}
+	public String findUserSaltByUserId(HashMap param) {
+		return sqlSession.selectOne("users.findUserSaltByUserId", param);
+	}
+	public int updateUserInfo(HashMap<String, String> param) {
+		return sqlSession.update("users.updateUserInfo", param);
+	}
 }

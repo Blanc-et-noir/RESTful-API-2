@@ -23,9 +23,8 @@ import io.jsonwebtoken.SignatureAlgorithm;
 public class JwtUtil {
 	private static String privatekey;
 	
-	public static final long refreshtokenMaxAge = 14*24*60*60*1000;
-	public static final long accesstokenMaxAge = 2*60*60*1000;
-	public static final int privateKeyMaxAge = 3*60*1000;
+	public static final long REFRESHTOKEN_MAXAGE = 14*24*60*60*1000;
+	public static final long ACCESSTOKEN_MAXAGE = 2*60*60*1000;
 	
 	@Value("${jwt.privatekey}")
 	public void setPrivatekey(String privatekey) {
@@ -60,8 +59,8 @@ public class JwtUtil {
 		//2. 사용자 정보를 해당 토큰에 추가함. 단, 민감한 정보는 토큰에 추가하지 않도록 함
 		Map<String,Object> claims = new HashMap<String,Object>();
 		claims.put("user_id", user.getUser_id());
-		claims.put("user_name", user.getUser_name());
 		claims.put("user_type_id", user.getUser_type_id());
+		claims.put("user_type_content", user.getUser_type_content());
 		
 		//3. 토큰의 유효시간을 설정함
 		Date now = new Date();

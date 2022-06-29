@@ -22,4 +22,8 @@ public class TokenDAO {
 	public HashMap getUserTokensByUserId(HashMap param) {
 		return sqlSession.selectOne("tokens.getUserTokensByUserId", param);
 	}
+
+	public int deleteUserTokens(HashMap param) {
+		return sqlSession.update("tokens.deleteUserTokens", param);		
+	}
 }

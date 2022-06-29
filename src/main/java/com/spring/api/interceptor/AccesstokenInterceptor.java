@@ -24,10 +24,10 @@ public class AccesstokenInterceptor implements HandlerInterceptor{
 			json.put("flag", false);
 			json.put("content", message);
 			
-			response.setStatus(401);
+			response.setStatus(errorcode);
 			response.setContentType("application/json");
 			response.setCharacterEncoding("UTF-8");
-			response.getWriter().write(json.toString());
+			response.getWriter().print(json);
 		//2. 기타 예외가 발생한 경우.
 		} catch (IOException e) {
 			
@@ -41,46 +41,56 @@ public class AccesstokenInterceptor implements HandlerInterceptor{
 		String uri = request.getRequestURI();
 		String method = request.getMethod();
 		
+		System.out.println(uri +" "+method+" ");
+		
 		if(uri.endsWith("/")) {
 			uri = uri.substring(0,uri.length()-1);
 		}
 		
 		if(method.equalsIgnoreCase("OPTIONS")) {
+			System.out.println("0");
 			return true;
 		}
 		
 		//1. 신규 회원가입 요청시에는 액세스 토큰이 필요없음.
 		if(uri.equals("/api/users")&&method.equalsIgnoreCase("POST")){
+			System.out.println("1");
 			return true;
 		//2. 회원정보를 조회하는 요청 외의 모든 GET 요청은 액세스 토큰이 필요없음.
-		}else if(!uri.equals("/api/users")&&method.equalsIgnoreCase("GET")) {
+		}else if(uri.equals("/api/users/publickeys")&&method.equalsIgnoreCase("GET")) {
+			System.out.println("2");
 			return true;
 		}
-		
+
 		//3. 액세스 토큰이 필요하나 액세스 토큰이 없는 경우에는, UNAUTHORIZED 응답.
 		if(user_accesstoken==null) {
 			setErrorMessage(response,401,"액세스 토큰이 존재하지 않습니다.");
+			System.out.println("3");
 			return false;
 		//4. 액세스 토큰이 필요하고, 액세스 토큰이 있는 경우에는 아래의 처리로직을 수행함.
 		}else {
 			//5. Redis의 블랙리스트에 존재하는 액세스 토큰일 경우에는 정상적으로 로그아웃 처리된 토큰이므로 UNAUTHORIZED 응답.
 			if(RedisUtil.getData(user_accesstoken)!=null) {
-				setErrorMessage(response,401,"해당 액세스 토큰은 이미 로그아웃 처리되었습니다.");
+				setErrorMessage(response,400,"해당 액세스 토큰은 이미 로그아웃 처리되었습니다.");
+				System.out.println("4");
 				return false;
 			}
 			
 			//6. 액세스 토큰이 위조되지 않았고, 아직 유효기간이 남아있는 경우 컨트롤러로 해당 요청을 전달함.
 			try {
 				JwtUtil.validateToken(user_accesstoken);
+				System.out.println("5");
 				return true;
 			//7. 액세스 토큰의 유효기간이 지난 경우 UNAUTHORIZED 응답.
 			}catch(ExpiredJwtException e) {
 				setErrorMessage(response,401,"해당 액세스 토큰은 기한이 만료되었습니다.");
+				System.out.println("6");
 				return false;
 			//8. 액세스 토큰이 위조된 경우 UNAUTHORIZED 응답.
 			}catch(Exception e) {
 				e.printStackTrace();
 				setErrorMessage(response,401,"해당 액세스 토큰은 위조되었습니다.");
+				System.out.println("7");
 				return false;
 			}
 		}

@@ -2,8 +2,8 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="tokens">
 	<select id="getUserInfoByUserId" parameterType="java.util.HashMap" resultType="java.util.HashMap">
-		SELECT *
-		FROM users
+		SELECT user_id, user_name,user_pw, user_phone, user_point, user_type_id,user_type_content, DATE_FORMAT(checkout_date,'%Y-%m-%d %T') AS "checkout_date", user_salt
+		FROM users NATURAL JOIN user_types
 		WHERE user_id = #{user_id}
 	</select>
 	
@@ -16,6 +16,12 @@
 	<update id="updateUserTokens" parameterType="java.util.HashMap">
 		UPDATE users
 		SET user_accesstoken = #{user_accesstoken}, user_refreshtoken = #{user_refreshtoken}
+		WHERE user_id = #{user_id}
+	</update>
+	
+	<update id="deleteUserTokens" parameterType="java.util.HashMap">
+		UPDATE users
+		SET user_accesstoken = NULL, user_refreshtoken = NULL
 		WHERE user_id = #{user_id}
 	</update>
 </mapper>
