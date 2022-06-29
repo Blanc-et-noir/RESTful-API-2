@@ -33,7 +33,6 @@ import com.spring.api.vo.UserVO;
 public class TokenServiceImpl implements TokenService{
 	@Autowired
 	private TokenDAO tokenDAO;
-	private final static int PRIVATEKEY_MAXAGE = 180*1000;
 
 	public HashMap createNewTokens(HashMap<String,String> param) throws 
 	
@@ -72,6 +71,7 @@ public class TokenServiceImpl implements TokenService{
 			throw new UserPwNotMatchedToRegexException();
 		}else {
 			user_pw = SHA.DSHA512(user_pw, (String)user.get("user_salt"));
+			
 			if(!user_pw.equals(user.get("user_pw"))) {
 				throw new UserPwNotMatchedException();
 			}
@@ -79,13 +79,12 @@ public class TokenServiceImpl implements TokenService{
 
 		//3. 존재하는 아이디, 올바른 비밀번호라면 토큰을 생성후 반환
 		UserVO userVo = new UserVO();
-		userVo.setUser_id(user_id);
-		userVo.setUser_name((String)user.get("user_name"));
+		userVo.setUser_id((String)user.get("user_id"));
 		userVo.setUser_type_id((Integer)user.get("user_type_id"));
 		userVo.setUser_type_content((String)user.get("user_type_content"));
 		
-		String user_accesstoken = JwtUtil.createToken(userVo, JwtUtil.accesstokenMaxAge);
-		String user_refreshtoken = JwtUtil.createToken(userVo, JwtUtil.refreshtokenMaxAge);
+		String user_accesstoken = JwtUtil.createToken(userVo, JwtUtil.ACCESSTOKEN_MAXAGE);
+		String user_refreshtoken = JwtUtil.createToken(userVo, JwtUtil.REFRESHTOKEN_MAXAGE);
 		
 		//4. 해당토큰을 현재 사용중인 토큰으로 업데이트
 		param = new HashMap();
@@ -116,8 +115,8 @@ public class TokenServiceImpl implements TokenService{
 		UserVO user = new UserVO();
 		user.setUser_id(user_id);
 
-		String new_user_accesstoken = JwtUtil.createToken(user, JwtUtil.accesstokenMaxAge);
-		String new_user_refreshtoken = JwtUtil.createToken(user, JwtUtil.refreshtokenMaxAge);
+		String new_user_accesstoken = JwtUtil.createToken(user, JwtUtil.ACCESSTOKEN_MAXAGE);
+		String new_user_refreshtoken = JwtUtil.createToken(user, JwtUtil.REFRESHTOKEN_MAXAGE);
 				
 		//3. 해당 사용자의 DB정보를 새로운 액세스, 리프레쉬 토큰으로 갱신함. 
 		HashMap param = new HashMap();
@@ -139,10 +138,26 @@ public class TokenServiceImpl implements TokenService{
 		return result;
 	}
 
-	public void deleteTokens(HttpServletRequest request) {
-		//1. 해당 사용자의 액세스, 리프레쉬 토큰을 얻음.
+	public void deleteTokens(HttpServletRequest request) throws NotFoundUserException, Exception{
 		String user_accesstoken = JwtUtil.getAccesstoken(request);
 		String user_refreshtoken = JwtUtil.getRefreshtoken(request);
+		
+		String user_id = (String) JwtUtil.getData(user_accesstoken, "user_id");
+		
+		HashMap param = new HashMap();
+		param.put("user_id", user_id);
+		
+		HashMap user = tokenDAO.getUserInfoByUserId(param);
+		
+		if(user==null) {
+			throw new NotFoundUserException();
+		}
+		
+		int row = tokenDAO.deleteUserTokens(param);
+		
+		if(row==0) {
+			throw new Exception();
+		}
 		
 		long user_accesstoken_exp = JwtUtil.getExpiration(user_accesstoken);
 		long user_refreshtoken_exp = JwtUtil.getExpiration(user_refreshtoken);

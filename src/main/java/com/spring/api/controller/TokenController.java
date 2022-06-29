@@ -92,12 +92,17 @@ public class TokenController {
 	
 	@RequestMapping(value = "/tokens",method = RequestMethod.DELETE)
 	public ResponseEntity<HashMap> deleteTokens(HttpServletRequest request) {
+		System.out.println("로그아웃");
 		HashMap result = new HashMap();
 		try {
 			tokenService.deleteTokens(request);
 			result.put("flag", true);
 			result.put("content", "로그아웃에 성공했습니다.");
 			return new ResponseEntity<HashMap>(result,HttpStatus.OK);
+		}catch(NotFoundUserException e) {
+			result.put("flag", false);
+			result.put("content", e.getMessage());
+			return new ResponseEntity<HashMap>(result,HttpStatus.BAD_REQUEST);
 		}catch(Exception e) {
 			e.printStackTrace();
 			result.put("flag", false);

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class RedisUtil {
-
+	public final static int PRIVATEKEY_MAXAGE = 180*1000;
     private static RedisTemplate redisTemplate;
 
     @Autowired

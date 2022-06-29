@@ -21,5 +21,5 @@ public interface TokenService {
 	
 	public HashMap updateTokens(HttpServletRequest request);
 	
-	public void deleteTokens(HttpServletRequest request);
+	public void deleteTokens(HttpServletRequest request) throws NotFoundUserException, Exception;
 }

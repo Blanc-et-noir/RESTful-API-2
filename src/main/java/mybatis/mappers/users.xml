@@ -11,8 +11,13 @@
 		FROM users
 		WHERE user_phone = #{user_phone}
 	</select>
+	<select id="findUserSaltByUserId" parameterType="java.util.HashMap" resultType="String">
+		SELECT user_salt
+		FROM users
+		WHERE user_id = #{user_id}
+	</select>
 	<select id="readUserInfo" parameterType="java.util.HashMap" resultType="java.util.HashMap">
-		SELECT user_id, user_name, user_point, user_type_id, user_type_content, checkout_date
+		SELECT user_id, user_pw, user_name, user_phone, question_id, question_answer, user_salt, user_point, user_type_id, user_type_content, DATE_FORMAT(checkout_date,'%Y-%m-%d %T') AS "checkout_date",user_accesstoken, user_refreshtoken
 		FROM users NATURAL JOIN user_types
 		WHERE user_id = #{user_id}
 	</select>
@@ -22,4 +27,16 @@
 			#{user_id}, #{user_pw}, #{user_name}, #{user_phone}, #{question_id}, #{question_answer}, #{user_salt}, 10, 1, DATE_FORMAT(NOW(),'%Y-%m-%d %T')
 		)
 	</insert>
+	<update id="updateUserInfo" parameterType="java.util.HashMap">
+		UPDATE users
+		<set>
+			<if test="new_user_name!=null">user_name = #{new_user_name},</if>
+			<if test="new_question_id!=null">question_id = #{new_question_id},</if>
+			<if test="new_question_answer!=null">question_answer = #{new_question_answer},</if>
+			<if test="new_user_pw!=null">user_pw = #{new_user_pw},</if>
+			<if test="new_user_phone!=null">user_phone = #{new_user_phone},</if>
+			<if test="new_user_salt!=null">user_salt = #{new_user_salt},</if>
+		</set>
+		WHERE user_id = #{user_id}
+	</update>
 </mapper>
