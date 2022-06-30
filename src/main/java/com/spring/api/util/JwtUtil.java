@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartRequest;
 
 import com.spring.api.vo.UserVO;
 
@@ -30,6 +31,14 @@ public class JwtUtil {
 	public void setPrivatekey(String privatekey) {
 		this.privatekey = privatekey;
 	}
+	
+	public static String getAccesstoken(MultipartRequest request) {
+		return ((HttpServletRequest) request).getHeader("user_accesstoken");
+	};
+	
+	public static String getRefreshtoken(MultipartRequest request) {
+		return ((HttpServletRequest) request).getHeader("user_refreshtoken");
+	};
 	
 	public static String getAccesstoken(HttpServletRequest request) {
 		return request.getHeader("user_accesstoken");
