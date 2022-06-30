@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="books">
+	<select id="findBookType" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT *
+		FROM book_types
+		WHERE book_type_id = #{book_type_id}
+	</select>
+	
+	<select id="findBookInfo" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT *
+		FROM books
+		WHERE book_isbn = #{book_isbn}
+	</select>
+	
+	<select id="findUserInfoByUserId" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT user_id, user_type_id
+		FROM users
+		WHERE user_id = #{user_id}
+	</select>
+	
+	<insert id="createNewBookAuthorInfo" parameterType="java.util.HashMap">
+		INSERT INTO authors VALUES
+		<foreach collection="list" item="item" separator=",">
+			(#{item.author_id},#{item.author_name},#{item.book_isbn})
+		</foreach>
+	</insert>
+	
+	<insert id="createNewBookTranslatorInfo" parameterType="java.util.HashMap">
+		INSERT INTO translators VALUES
+		<foreach collection="list" item="item" separator=",">
+			(#{item.translator_id},#{item.translator_name},#{item.book_isbn})
+		</foreach>
+	</insert>
+	
+	<insert id="createNewBookInfo" parameterType="java.util.HashMap">
+		INSERT INTO books
+		VALUES(#{book_isbn},#{book_name},#{book_publisher},DATE_FORMAT(#{book_date},'%Y-%m-%d %T'),${book_quantity},#{book_type_id})
+	</insert>
+	
+	<insert id="createNewBookImageInfo" parameterType="java.util.HashMap">
+		INSERT INTO book_images VALUES
+		<foreach collection="list" item="item" separator=",">
+			(#{item.book_image_id},#{item.book_image_extension},DATE_FORMAT(SYSDATE(),'%Y-%m-%d %T'),#{item.book_isbn})
+		</foreach>
+	</insert>
+</mapper>
