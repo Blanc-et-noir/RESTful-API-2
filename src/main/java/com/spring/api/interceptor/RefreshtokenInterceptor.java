@@ -18,7 +18,10 @@ import com.spring.api.util.RedisUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 
 public class RefreshtokenInterceptor implements HandlerInterceptor{
-	
+	@Autowired
+	private JwtUtil jwtUtil;
+	@Autowired
+	private RedisUtil redisUtil;
 	@Autowired
 	private TokenDAO tokenDAO;
 	
@@ -43,8 +46,8 @@ public class RefreshtokenInterceptor implements HandlerInterceptor{
 	@Override
 	//리프레쉬 토큰이 필요한 기능을 호출하면, 해당 리프레쉬 토큰이 유효성 여부를 판단하여 해당 요청을 컨트롤러로 전송할지 여부를 결정함.
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {	
-		String user_accesstoken = JwtUtil.getAccesstoken(request);
-		String user_refreshtoken = JwtUtil.getRefreshtoken(request);
+		String user_accesstoken = jwtUtil.getAccesstoken(request);
+		String user_refreshtoken = jwtUtil.getRefreshtoken(request);
 		String uri = request.getRequestURI();
 		String method = request.getMethod();
 		
@@ -77,14 +80,14 @@ public class RefreshtokenInterceptor implements HandlerInterceptor{
 			return false;
 		}else {
 			//4. Redis의 블랙리스트에 존재하는 리프레쉬 토큰일 경우에는 정상적으로 로그아웃 처리된 토큰이므로 UNAUTHORIZED 응답.
-			if(RedisUtil.getData(user_refreshtoken)!=null) {
+			if(redisUtil.getData(user_refreshtoken)!=null) {
 				setErrorMessage(response,401,"해당 리프레쉬 토큰은 이미 로그아웃 처리되었습니다.");
 				System.out.println("4");
 				return false;
 			}
 			
 			//5. Redis의 블랙리스트에 존재하는 액세스 토큰일 경우에는 정상적으로 로그아웃 처리된 토큰이므로 UNAUTHORIZED 응답.
-			if(RedisUtil.getData(user_accesstoken)!=null) {
+			if(redisUtil.getData(user_accesstoken)!=null) {
 				setErrorMessage(response,401,"해당 액세스 토큰은 이미 로그아웃 처리되었습니다.");
 				System.out.println("5");
 				return false;
@@ -92,7 +95,7 @@ public class RefreshtokenInterceptor implements HandlerInterceptor{
 			
 			//6. 액세스 토큰이 위조되지 않았고, 아직 유효기간이 남아있는 경우 리프레쉬 토큰의 유효성을 검사함.
 			try {
-				JwtUtil.validateToken(user_accesstoken);
+				jwtUtil.validateToken(user_accesstoken);
 			}catch(ExpiredJwtException e) {
 
 			//7. 액세스 토큰이 위조된 경우 UNAUTHORIZED 응답.
@@ -104,11 +107,11 @@ public class RefreshtokenInterceptor implements HandlerInterceptor{
 			
 			//8. 리프레쉬 토큰이 위조되지 않았고, 아직 유효기간이 남아있는 경우 컨트롤러로 해당 요청을 전달함.
 			try {
-				JwtUtil.validateToken(user_refreshtoken);
+				jwtUtil.validateToken(user_refreshtoken);
 				
 				//9. 액세스 토큰과 리프레쉬 토큰의 주인이 일치하는지 확인함.
-				String access_user_id = (String)JwtUtil.getData(user_accesstoken, "user_id");
-				String refresh_user_id = (String)JwtUtil.getData(user_refreshtoken, "user_id");
+				String access_user_id = (String)jwtUtil.getData(user_accesstoken, "user_id");
+				String refresh_user_id = (String)jwtUtil.getData(user_refreshtoken, "user_id");
 
 				if(!access_user_id.equals(refresh_user_id)) {
 					setErrorMessage(response,401,"액세스 토큰 및 리프레쉬 토큰 발급자 정보가 일치하지 않습니다.");

@@ -22,42 +22,37 @@ import io.jsonwebtoken.SignatureAlgorithm;
 
 @Component
 public class JwtUtil {
-	private static String privatekey;
-	
-	public static final long REFRESHTOKEN_MAXAGE = 14*24*60*60*1000;
-	public static final long ACCESSTOKEN_MAXAGE = 2*60*60*1000;
-	
 	@Value("${jwt.privatekey}")
-	public void setPrivatekey(String privatekey) {
-		this.privatekey = privatekey;
-	}
+	private String privatekey = null;
+	public final long REFRESHTOKEN_MAXAGE = 14*24*60*60*1000;
+	public final long ACCESSTOKEN_MAXAGE = 2*60*60*1000;
 	
-	public static String getAccesstoken(MultipartRequest request) {
+	public String getAccesstoken(MultipartRequest request) {
 		return ((HttpServletRequest) request).getHeader("user_accesstoken");
 	};
 	
-	public static String getRefreshtoken(MultipartRequest request) {
+	public String getRefreshtoken(MultipartRequest request) {
 		return ((HttpServletRequest) request).getHeader("user_refreshtoken");
 	};
 	
-	public static String getAccesstoken(HttpServletRequest request) {
+	public String getAccesstoken(HttpServletRequest request) {
 		return request.getHeader("user_accesstoken");
 	};
 	
-	public static String getRefreshtoken(HttpServletRequest request) {
+	public String getRefreshtoken(HttpServletRequest request) {
 		return request.getHeader("user_refreshtoken");
 	};
 	
-	public static void setAccesstoken(HttpServletResponse response, String user_accesstoken) {
+	public void setAccesstoken(HttpServletResponse response, String user_accesstoken) {
 		response.setHeader("user_accesstoken", user_accesstoken);
 	};
 	
-	public static void setRefreshtoken(HttpServletResponse response, String user_refreshtoken) {
+	public void setRefreshtoken(HttpServletResponse response, String user_refreshtoken) {
 		response.setHeader("user_refreshtoken", user_refreshtoken);
 	};
 	
 	//사용자 정보를 바탕으로 토큰을 생성함.
-	public static String createToken(UserVO user, long age) {
+	public String createToken(UserVO user, long age) {
 		String secretKey = Base64.getEncoder().encodeToString(privatekey.getBytes());
 		
 		//1. JWT 토큰의 헤더 정보를 설정함.
@@ -87,7 +82,7 @@ public class JwtUtil {
 	}
 	
 	//클라이언트로부터 전달받은 해당 토큰이 위조되었는지 아닌지 판단함.
-	public static void validateToken(String token){
+	public void validateToken(String token){
 		String secretKey = Base64.getEncoder().encodeToString(privatekey.getBytes());
 		
 		//1. 해당 JWT 토큰에 문제가 있는지 판단함.
@@ -96,7 +91,7 @@ public class JwtUtil {
 	}
 	
 	//클라이언트로부터 전달받은 해당 토큰에 저장된 정보를 얻음.
-    public static Map<String,Object> getInfo(String token){
+    public Map<String,Object> getInfo(String token){
     	String secretKey = Base64.getEncoder().encodeToString(privatekey.getBytes());
     	
     	//1. 해당 JWT 토큰으로부터 저장된 정보를 얻음.
@@ -110,7 +105,7 @@ public class JwtUtil {
     }
     
     //클라이언트로부터 전달받은 해당 토큰에 저장된 정보를 얻음.
-    public static Object getData(String token, String data){
+    public Object getData(String token, String data){
     	String secretKey = Base64.getEncoder().encodeToString(privatekey.getBytes());
     	
     	//1. 해당 JWT 토큰으로부터 저장된 정보를 얻음.
@@ -127,7 +122,7 @@ public class JwtUtil {
     }
     
     //클라이언트로부터 전달받은 해당 토큰의 남은 유효시간을 얻음.
-    public static Long getExpiration(String token) {
+    public Long getExpiration(String token) {
     	String secretKey = Base64.getEncoder().encodeToString(privatekey.getBytes());
     	
     	//1. 해당 토큰의 남은 유효시간을 얻음.

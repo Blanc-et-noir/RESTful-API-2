@@ -1,8 +1,5 @@
 package com.spring.api.util;
 
-import org.springframework.stereotype.Component;
-
-@Component
 public class RegexUtil {
 	public final static String USER_ID_REGEX = "^[a-zA-Z]{1}[a-zA-Z0-9_]{7,15}$";
 	public final static String USER_PW_REGEX = "[a-zA-Z0-9_]{8,16}$";
