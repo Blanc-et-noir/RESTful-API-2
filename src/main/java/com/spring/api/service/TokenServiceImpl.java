@@ -11,37 +11,28 @@ import org.springframework.transaction.annotation.Transactional;
 import com.spring.api.dao.TokenDAO;
 import com.spring.api.encrypt.RSA2048;
 import com.spring.api.encrypt.SHA;
-import com.spring.api.exception.users.InvalidPublicKeyException;
-import com.spring.api.exception.users.NotFoundUserException;
-import com.spring.api.exception.users.UserIdNotMatchedToRegexException;
-import com.spring.api.exception.users.UserPwNotMatchedException;
-import com.spring.api.exception.users.UserPwNotMatchedToRegexException;
+import com.spring.api.errorCode.ErrorCode;
+import com.spring.api.exception.CustomException;
 import com.spring.api.util.JwtUtil;
 import com.spring.api.util.RedisUtil;
 import com.spring.api.util.RegexUtil;
 import com.spring.api.vo.UserVO;
 
 @Transactional(rollbackFor= {
-		InvalidPublicKeyException.class,
-		NotFoundUserException.class,
-		UserIdNotMatchedToRegexException.class,
-		UserPwNotMatchedToRegexException.class,
-		UserPwNotMatchedException.class,
+		CustomException.class,
+		RuntimeException.class,
 		Exception.class
 })
 @Service("tokenService")
 public class TokenServiceImpl implements TokenService{
 	@Autowired
+	private JwtUtil jwtUtil;
+	@Autowired
+	private RedisUtil redisUtil;
+	@Autowired
 	private TokenDAO tokenDAO;
 
-	public HashMap createNewTokens(HashMap<String,String> param) throws 
-	
-	InvalidPublicKeyException, 
-	NotFoundUserException, 
-	UserIdNotMatchedToRegexException, 
-	UserPwNotMatchedToRegexException, 
-	UserPwNotMatchedException, 
-	Exception {
+	public HashMap createNewTokens(HashMap<String,String> param) {
 		
 		String user_id = param.get("user_id");
 		String user_pw = param.get("user_pw");
@@ -49,8 +40,8 @@ public class TokenServiceImpl implements TokenService{
 		String user_privatekey = null;
 		
 		//공개키가 유효하지 않으면 공개키 유효성 불충족 예외 발생
-		if((user_privatekey = (String) RedisUtil.getData(user_publickey))==null) {
-			throw new InvalidPublicKeyException();
+		if((user_privatekey = (String) redisUtil.getData(user_publickey))==null) {
+			throw new CustomException(ErrorCode.INVALID_PUBLICKEY);
 		}
 		
 		user_pw = RSA2048.decrypt(user_pw, user_privatekey);
@@ -60,20 +51,20 @@ public class TokenServiceImpl implements TokenService{
 		if(RegexUtil.checkRegex(user_id, RegexUtil.USER_ID_REGEX)) {
 			user = tokenDAO.getUserInfoByUserId(param);
 			if(user==null) {
-				throw new NotFoundUserException();
+				throw new CustomException(ErrorCode.NOT_FOUND_USER);
 			}
 		}else {
-			throw new UserIdNotMatchedToRegexException();
+			throw new CustomException(ErrorCode.USER_ID_NOT_MATCHED_TO_REGEX);
 		}
 		
 		//2. 비밀번호가 정규식에 적합한지 판단, 적합하다면 비밀번호가 올바른지 확인, 아니면 예외
 		if(!RegexUtil.checkRegex(user_pw, RegexUtil.USER_PW_REGEX)) {
-			throw new UserPwNotMatchedToRegexException();
+			throw new CustomException(ErrorCode.USER_PW_NOT_MATCHED_TO_REGEX);
 		}else {
 			user_pw = SHA.DSHA512(user_pw, (String)user.get("user_salt"));
 			
 			if(!user_pw.equals(user.get("user_pw"))) {
-				throw new UserPwNotMatchedException();
+				throw new CustomException(ErrorCode.USER_PW_NOT_MATCHED);
 			}
 		}
 
@@ -83,8 +74,8 @@ public class TokenServiceImpl implements TokenService{
 		userVo.setUser_type_id((Integer)user.get("user_type_id"));
 		userVo.setUser_type_content((String)user.get("user_type_content"));
 		
-		String user_accesstoken = JwtUtil.createToken(userVo, JwtUtil.ACCESSTOKEN_MAXAGE);
-		String user_refreshtoken = JwtUtil.createToken(userVo, JwtUtil.REFRESHTOKEN_MAXAGE);
+		String user_accesstoken = jwtUtil.createToken(userVo, jwtUtil.ACCESSTOKEN_MAXAGE);
+		String user_refreshtoken = jwtUtil.createToken(userVo, jwtUtil.REFRESHTOKEN_MAXAGE);
 		
 		//4. 해당토큰을 현재 사용중인 토큰으로 업데이트
 		param = new HashMap();
@@ -95,7 +86,7 @@ public class TokenServiceImpl implements TokenService{
 		int row = tokenDAO.updateUserTokens(param);
 		
 		if(row==0) {
-			throw new Exception();
+			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
 		}
 		
 		HashMap result = new HashMap();
@@ -107,16 +98,16 @@ public class TokenServiceImpl implements TokenService{
 
 	public HashMap updateTokens(HttpServletRequest request) {
 		//1. 해당 사용자의 액세스, 리프레쉬 토큰을 얻음.
-		String user_accesstoken = JwtUtil.getAccesstoken(request);
-		String user_refreshtoken = JwtUtil.getRefreshtoken(request);
+		String user_accesstoken = jwtUtil.getAccesstoken(request);
+		String user_refreshtoken = jwtUtil.getRefreshtoken(request);
 
 		//2. 해당 사용자의 ID를 활용해 새로운 액세스, 리프레쉬 토큰을 발급함.
-		String user_id = (String)JwtUtil.getData(user_accesstoken, "user_id");
+		String user_id = (String)jwtUtil.getData(user_accesstoken, "user_id");
 		UserVO user = new UserVO();
 		user.setUser_id(user_id);
 
-		String new_user_accesstoken = JwtUtil.createToken(user, JwtUtil.ACCESSTOKEN_MAXAGE);
-		String new_user_refreshtoken = JwtUtil.createToken(user, JwtUtil.REFRESHTOKEN_MAXAGE);
+		String new_user_accesstoken = jwtUtil.createToken(user, jwtUtil.ACCESSTOKEN_MAXAGE);
+		String new_user_refreshtoken = jwtUtil.createToken(user, jwtUtil.REFRESHTOKEN_MAXAGE);
 				
 		//3. 해당 사용자의 DB정보를 새로운 액세스, 리프레쉬 토큰으로 갱신함. 
 		HashMap param = new HashMap();
@@ -132,17 +123,17 @@ public class TokenServiceImpl implements TokenService{
 		result.put("user_refreshtoken", new_user_refreshtoken);
 				
 		//5. 기존에 발급받았던 액세스, 리프레쉬 토큰은 Redis에 저장하여 로그아웃 처리함.
-		RedisUtil.setData(user_accesstoken, "removed", JwtUtil.getExpiration(user_accesstoken));
-		RedisUtil.setData(user_refreshtoken, "removed", JwtUtil.getExpiration(user_refreshtoken));
+		redisUtil.setData(user_accesstoken, "removed", jwtUtil.getExpiration(user_accesstoken));
+		redisUtil.setData(user_refreshtoken, "removed", jwtUtil.getExpiration(user_refreshtoken));
 		
 		return result;
 	}
 
-	public void deleteTokens(HttpServletRequest request) throws NotFoundUserException, Exception{
-		String user_accesstoken = JwtUtil.getAccesstoken(request);
-		String user_refreshtoken = JwtUtil.getRefreshtoken(request);
+	public void deleteTokens(HttpServletRequest request){
+		String user_accesstoken = jwtUtil.getAccesstoken(request);
+		String user_refreshtoken = jwtUtil.getRefreshtoken(request);
 		
-		String user_id = (String) JwtUtil.getData(user_accesstoken, "user_id");
+		String user_id = (String) jwtUtil.getData(user_accesstoken, "user_id");
 		
 		HashMap param = new HashMap();
 		param.put("user_id", user_id);
@@ -150,19 +141,19 @@ public class TokenServiceImpl implements TokenService{
 		HashMap user = tokenDAO.getUserInfoByUserId(param);
 		
 		if(user==null) {
-			throw new NotFoundUserException();
+			throw new CustomException(ErrorCode.NOT_FOUND_USER);
 		}
 		
 		int row = tokenDAO.deleteUserTokens(param);
 		
 		if(row==0) {
-			throw new Exception();
+			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
 		}
 		
-		long user_accesstoken_exp = JwtUtil.getExpiration(user_accesstoken);
-		long user_refreshtoken_exp = JwtUtil.getExpiration(user_refreshtoken);
+		long user_accesstoken_exp = jwtUtil.getExpiration(user_accesstoken);
+		long user_refreshtoken_exp = jwtUtil.getExpiration(user_refreshtoken);
 		
-		RedisUtil.setData(user_accesstoken, "removed", user_accesstoken_exp);
-		RedisUtil.setData(user_refreshtoken, "removed", user_refreshtoken_exp);
+		redisUtil.setData(user_accesstoken, "removed", user_accesstoken_exp);
+		redisUtil.setData(user_refreshtoken, "removed", user_refreshtoken_exp);
 	}
 }

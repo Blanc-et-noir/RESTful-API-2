@@ -6,6 +6,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -15,6 +16,10 @@ import com.spring.api.util.RedisUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 
 public class AccesstokenInterceptor implements HandlerInterceptor{
+	@Autowired
+	private JwtUtil jwtUtil;
+	@Autowired
+	private RedisUtil redisUtil;
 	
 	//액세스 토큰이 필요한 기능을 요청할때, 해당 액세스 토큰이 유효하지 않은경우 에러 메세지를 전달함.
 	private static void setErrorMessage(HttpServletResponse response, int errorcode, String message){
@@ -37,7 +42,7 @@ public class AccesstokenInterceptor implements HandlerInterceptor{
 	@Override
 	//액세스 토큰이 필요한 기능을 호출하면, 해당 액세스 토큰이 유효성 여부를 판단하여 해당 요청을 컨트롤러로 전송할지 여부를 결정함.
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-		String user_accesstoken = JwtUtil.getAccesstoken(request);
+		String user_accesstoken = jwtUtil.getAccesstoken(request);
 		String uri = request.getRequestURI();
 		String method = request.getMethod();
 		
@@ -70,7 +75,7 @@ public class AccesstokenInterceptor implements HandlerInterceptor{
 		//4. 액세스 토큰이 필요하고, 액세스 토큰이 있는 경우에는 아래의 처리로직을 수행함.
 		}else {
 			//5. Redis의 블랙리스트에 존재하는 액세스 토큰일 경우에는 정상적으로 로그아웃 처리된 토큰이므로 UNAUTHORIZED 응답.
-			if(RedisUtil.getData(user_accesstoken)!=null) {
+			if(redisUtil.getData(user_accesstoken)!=null) {
 				setErrorMessage(response,400,"해당 액세스 토큰은 이미 로그아웃 처리되었습니다.");
 				System.out.println("4");
 				return false;
@@ -78,7 +83,7 @@ public class AccesstokenInterceptor implements HandlerInterceptor{
 			
 			//6. 액세스 토큰이 위조되지 않았고, 아직 유효기간이 남아있는 경우 컨트롤러로 해당 요청을 전달함.
 			try {
-				JwtUtil.validateToken(user_accesstoken);
+				jwtUtil.validateToken(user_accesstoken);
 				System.out.println("5");
 				return true;
 			//7. 액세스 토큰의 유효기간이 지난 경우 UNAUTHORIZED 응답.

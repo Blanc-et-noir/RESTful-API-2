@@ -3,20 +3,18 @@ package com.spring.api.util;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
 public class RedisUtil {
-	public final static int PRIVATEKEY_MAXAGE = 180*1000;
-    private static RedisTemplate redisTemplate;
+	@Value("${redis.privatekey_maxage}")
+	public int PRIVATEKEY_MAXAGE;
+	@Autowired
+    private RedisTemplate redisTemplate = null;
 
-    @Autowired
-    RedisUtil(RedisTemplate redisTemplate){
-    	this.redisTemplate = redisTemplate;
-    }
-    
-    public static Object getData(String key){
+    public Object getData(String key){
     	try {
     		if(key == null) {
     			return null;
@@ -28,15 +26,15 @@ public class RedisUtil {
     	}
     }
 
-    public static void setData(String key, String value){
+    public void setData(String key, String value){
         redisTemplate.opsForValue().set(key,value);
     }
 
-    public static void setData(String key,String value,long duration){
+    public void setData(String key,String value,long duration){
 		redisTemplate.opsForValue().set(key, value, duration, TimeUnit.MILLISECONDS);
     }
 
-    public static void deleteData(String key){
+    public void deleteData(String key){
     	redisTemplate.delete(key);
     }
 }
