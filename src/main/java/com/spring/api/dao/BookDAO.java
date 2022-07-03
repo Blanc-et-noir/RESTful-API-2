@@ -1,6 +1,7 @@
 package com.spring.api.dao;
 
 import java.util.HashMap;
+import java.util.List;
 
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,5 +38,21 @@ public class BookDAO {
 
 	public HashMap findBookInfo(HashMap param) {
 		return sqlSession.selectOne("books.findBookInfo", param);
+	}
+
+	public List readBookTypes() {
+		return sqlSession.selectList("books.readBookTypes");
+	}
+
+	public HashMap readBookInfo(HashMap param) {
+		return sqlSession.selectOne("books.readBookInfo",param);
+	}
+
+	public int decreaseBookQuantity(HashMap param) {
+		return sqlSession.update("books.decreaseBookQuantity",param);	
+	}
+
+	public int increaseBookQuantity(HashMap param) {
+		return sqlSession.update("books.increaseBookQuantity",param);	
 	}
 }

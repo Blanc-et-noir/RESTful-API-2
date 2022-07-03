@@ -27,4 +27,13 @@ public class BookController {
 		result.put("content", "신규 도서 등록에 성공했습니다.");
 		return new ResponseEntity<HashMap>(result,HttpStatus.CREATED);
 	}
+	
+	@RequestMapping(value= {"/books/book_types"}, method= {RequestMethod.GET})
+	public ResponseEntity<HashMap> readBookTypes(){
+		HashMap result = new HashMap();
+		result.put("flag", true);
+		result.put("book_types", bookService.readBookTypes());
+		result.put("content", "도서 장르 조회에 성공했습니다.");
+		return new ResponseEntity<HashMap>(result,HttpStatus.CREATED);
+	}
 }

@@ -21,12 +21,47 @@
 		FROM users NATURAL JOIN user_types
 		WHERE user_id = #{user_id}
 	</select>
+	<select id="readCheckOutInfosByUserId" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT checkout_id, user_id, book_isbn, DATE_FORMAT(checkout_begin_date,"%Y-%m-%d %T") AS "checkout_begin_date", DATE_FORMAT(checkout_end_date,"%Y-%m-%d %T") AS "checkout_end_date", DATE_FORMAT(checkout_return_date,"%Y-%m-%d %T") AS "checkout_return_date", checkout_renew_count
+		FROM checkouts
+		WHERE user_id = #{user_id} AND checkout_return_date IS NULL
+	</select>
+	<select id="readCheckOutInfoByUserId" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT checkout_id, user_id, book_isbn, DATE_FORMAT(checkout_begin_date,"%Y-%m-%d %T") AS "checkout_begin_date", DATE_FORMAT(checkout_end_date,"%Y-%m-%d %T") AS "checkout_end_date", DATE_FORMAT(checkout_return_date,"%Y-%m-%d %T") AS "checkout_return_date", checkout_renew_count
+		FROM checkouts
+		WHERE user_id = #{user_id} AND checkout_return_date IS NULL AND checkout_id = #{checkout_id}
+	</select>
+	<select id="readReservationInfosByBookIsbn" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT reservation_id, user_id, book_isbn, DATE_FORMAT(reservation_date,"%Y-%m-%d %T") AS "reservation_date"
+		FROM reservations
+		WHERE book_isbn = #{book_isbn}
+		ORDER BY reservation_date ASC
+	</select>
+	<select id="readReservationInfosByUserId" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT reservation_id, user_id, book_isbn, DATE_FORMAT(reservation_date,"%Y-%m-%d %T") AS "reservation_date"
+		FROM reservations
+		WHERE user_id = #{user_id}
+		ORDER BY reservation_date ASC
+	</select>
 	<insert id="createNewUserInfo" parameterType="java.util.HashMap">
 		INSERT INTO users(user_id, user_pw, user_name, user_phone, question_id, question_answer, user_salt, user_point, user_type_id, checkout_date)
 		VALUES(
 			#{user_id}, #{user_pw}, #{user_name}, #{user_phone}, #{question_id}, #{question_answer}, #{user_salt}, 10, 1, DATE_FORMAT(NOW(),'%Y-%m-%d %T')
 		)
 	</insert>
+	<insert id="createNewPointInfo" parameterType="java.util.HashMap">
+		INSERT INTO points
+		VALUES(#{point_id},#{user_id},#{point_code},#{point_content},${point_amount},DATE_FORMAT(NOW(),'%Y-%m-%d %T'))
+	</insert>
+	<insert id="createNewReservationInfo" parameterType="java.util.HashMap">
+		INSERT INTO reservations
+		VALUES(#{reservation_id},#{user_id},#{book_isbn},DATE_FORMAT(NOW(),'%Y-%m-%d %T'))
+	</insert>
+	<insert id="createCheckoutInfo">
+		INSERT INTO checkouts(checkout_id, user_id, book_isbn, checkout_begin_date, checkout_end_date, checkout_renew_count)
+		VALUES(#{checkout_id},#{user_id},#{book_isbn},DATE_FORMAT(NOW(),'%Y-%m-%d %T'), DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 14 DAY),'%Y-%m-%d %T'),2)
+	</insert>
+	
 	<update id="updateUserInfo" parameterType="java.util.HashMap">
 		UPDATE users
 		<set>
@@ -39,4 +74,24 @@
 		</set>
 		WHERE user_id = #{user_id}
 	</update>
+	<update id="updateUserCheckOutDate" parameterType="java.util.HashMap">
+		UPDATE users
+		SET checkout_date = DATE_FORMAT(#{newCheckout_date},'%Y-%m-%d %T')
+		WHERE user_id = #{user_id}
+	</update>
+	<update id="returnCheckOut" parameterType="java.util.HashMap">
+		UPDATE checkouts
+		SET checkout_return_date = DATE_FORMAT(NOW(),'%Y-%m-%d %T')
+		WHERE user_id = #{user_id} AND checkout_id = #{checkout_id}
+	</update>
+	<update id="increaseUserPoint" parameterType="java.util.HashMap">
+		UPDATE users
+		SET user_points = user_points + ${point_amount}
+		WHERE user_id = #{user_id}
+	</update>
+	
+	<delete id="deleteReservationByUserIdAndBookIsbn" parameterType="java.util.HashMap">
+		DELETE FROM reservations
+		WHERE user_id = #{user_id} AND book_isbn = #{book_isbn}
+	</delete>
 </mapper>

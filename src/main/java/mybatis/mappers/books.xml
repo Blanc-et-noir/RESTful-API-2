@@ -19,6 +19,17 @@
 		WHERE user_id = #{user_id}
 	</select>
 	
+	<select id="readBookTypes" resultType="java.util.HashMap">
+		SELECT *
+		FROM book_types
+	</select>
+	
+	<select id="readBookInfo" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT *
+		FROM books
+		WHERE book_isbn = #{book_isbn}
+	</select>
+	
 	<insert id="createNewBookAuthorInfo" parameterType="java.util.HashMap">
 		INSERT INTO authors VALUES
 		<foreach collection="list" item="item" separator=",">
@@ -44,4 +55,15 @@
 			(#{item.book_image_id},#{item.book_image_extension},DATE_FORMAT(SYSDATE(),'%Y-%m-%d %T'),#{item.book_isbn})
 		</foreach>
 	</insert>
+	
+	<update id="decreaseBookQuantity" parameterType="java.util.HashMap">
+		UPDATE books
+		SET book_quantity = book_quantity - 1
+		WHERE book_isbn = #{book_isbn}
+	</update>
+	<update id="increaseBookQuantity" parameterType="java.util.HashMap">
+		UPDATE books
+		SET book_quantity = book_quantity + 1
+		WHERE book_isbn = #{book_isbn}
+	</update>
 </mapper>

@@ -61,8 +61,8 @@ public class AccesstokenInterceptor implements HandlerInterceptor{
 		if(uri.equals("/api/users")&&method.equalsIgnoreCase("POST")){
 			System.out.println("1");
 			return true;
-		//2. 회원정보를 조회하는 요청 외의 모든 GET 요청은 액세스 토큰이 필요없음.
-		}else if(uri.equals("/api/users/publickeys")&&method.equalsIgnoreCase("GET")) {
+		//2. 공개키 발급 또는 도서 장르 조회는 액세스 토큰이 필요 없음.
+		}else if((uri.equals("/api/users/publickeys")||uri.equals("/api/books/book_types"))&&method.equalsIgnoreCase("GET")) {
 			System.out.println("2");
 			return true;
 		}
