@@ -1,6 +1,11 @@
 package com.spring.api.service;
 
+import java.sql.Timestamp;
+import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -8,10 +13,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.spring.api.code.ErrorCode;
+import com.spring.api.code.PointCode;
+import com.spring.api.dao.BookDAO;
 import com.spring.api.dao.UserDAO;
 import com.spring.api.encrypt.RSA2048;
 import com.spring.api.encrypt.SHA;
-import com.spring.api.errorCode.ErrorCode;
 import com.spring.api.exception.CustomException;
 import com.spring.api.util.JwtUtil;
 import com.spring.api.util.RedisUtil;
@@ -31,6 +38,8 @@ public class UserServiceImpl implements UserService {
 	private RedisUtil redisUtil;
 	@Autowired
 	private UserDAO userDAO;
+	@Autowired
+	private BookDAO bookDAO;
 	
 	//공개키 및 비밀키를 생성하고, 공개키는 클라이언트에게 반환, 비밀키는 Redis에 일정시간동안 저장하는 로직.
 	@Override
@@ -41,7 +50,7 @@ public class UserServiceImpl implements UserService {
 		String user_privatekey = keyPair.get("user_privatekey");
 
 		redisUtil.setData(user_publickey, user_privatekey,redisUtil.PRIVATEKEY_MAXAGE);
-		
+		System.out.println(redisUtil.getData(user_publickey));
 		return user_publickey;
 	}
 	
@@ -56,7 +65,7 @@ public class UserServiceImpl implements UserService {
 		String user_phone = param.get("user_phone");
 		String question_id = param.get("question_id");
 		String question_answer = param.get("question_answer");
-
+		
 		//1. 공개키가 유효하지 않으면 공개키 유효성 불충족 예외가 발생함.
 		//   비밀키가 Redis에 저장될 수 있는 시간이 지났거나, 공개키 자체가 유효하지 않을때 발생함.
 		if((user_privatekey = (String) redisUtil.getData(user_publickey))==null) {
@@ -204,6 +213,10 @@ public class UserServiceImpl implements UserService {
 			throw new CustomException(ErrorCode.INVALID_PUBLICKEY);
 		}
 		
+		if(question_answer==null) {
+			throw new CustomException(ErrorCode.QUESTION_ANSWER_REQUIRED);
+		}
+		
 		question_answer = SHA.DSHA512(RSA2048.decrypt(question_answer, user_privatekey).replaceAll(" ", ""),user_salt);
 		
 		if(!question_answer.equals((String)user.get("question_answer"))){
@@ -249,13 +262,13 @@ public class UserServiceImpl implements UserService {
 		
 		
 		//7. 비밀번호 찾기 질문의 정답 변경시에는 해당 답이 특정 바이트 이하의 크기여야함.
-		String new_user_question_answer = (String) param.get("new_user_question_answer");
-		if(new_user_question_answer!=null) {
-			new_user_question_answer = RSA2048.decrypt(new_user_question_answer, user_privatekey).replaceAll(" ", "");
-			if(RegexUtil.checkBytes(new_user_question_answer, RegexUtil.QUESTION_ANSWER_MAXBYTES)) {
-				new_user_question_answer = SHA.DSHA512(new_user_question_answer, new_user_salt);
+		String new_question_answer = (String) param.get("new_question_answer");
+		if(new_question_answer!=null) {
+			new_question_answer = RSA2048.decrypt(new_question_answer, user_privatekey).replaceAll(" ", "");
+			if(RegexUtil.checkBytes(new_question_answer, RegexUtil.QUESTION_ANSWER_MAXBYTES)) {
+				new_question_answer = SHA.DSHA512(new_question_answer, new_user_salt);
 				param.put("new_user_salt", new_user_salt);
-				param.put("new_user_question_answer", new_user_question_answer);
+				param.put("new_question_answer", new_question_answer);
 				flag3=true;
 			}else {
 				throw new CustomException(ErrorCode.QUESTION_ANSWER_EXCEEDED_LIMIT_ON_MAXBYTES);
@@ -290,5 +303,260 @@ public class UserServiceImpl implements UserService {
 	public void deleteUserInfo(HashMap<String,String> param) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public void createCheckoutInfo(HttpServletRequest request, HashMap param) {
+		//1. 해당 회원정보가 DB에 실제로 존재하는지 확인함.
+		HashMap user = userDAO.readUserInfo(param);
+				
+		if(user==null) {
+			throw new CustomException(ErrorCode.NOT_FOUND_USER);
+		}
+		
+		//2. 대출 요청을 수행할 권한이 있는지 판단함.
+		String user_accesstoken = jwtUtil.getAccesstoken(request);
+		Integer user_type_id = (Integer) jwtUtil.getData(user_accesstoken, "user_type_id");
+						
+		if(user_type_id!=0) {
+			throw new CustomException(ErrorCode.NOT_AUTHORIZED);
+		}
+		
+		//3. 대출가능 시각이후에 대출하는 것인지 판단함.
+		Timestamp checkout_date = Timestamp.valueOf((String)user.get("checkout_date"));
+		Timestamp now = new Timestamp(System.currentTimeMillis());
+		
+		if(checkout_date.before(checkout_date)) {
+			throw new CustomException(ErrorCode.NOT_ABLE_TO_CHECK_OUT_DUE_TO_DATE);
+		}
+		
+		//4. 현재 대출중인 도서의 수가 3미만인지 확인함.
+		List<HashMap> list = userDAO.readCheckOutInfosByUserId(param);
+		if(list.size()>=3) {
+			throw new CustomException(ErrorCode.NOT_ABLE_TO_CHECK_OUT_DUE_TO_LIMIT);
+		}
+		
+		//5. 연체한 대출정보가 존재하는지 판단함.
+		for(HashMap hm : list) {
+			Timestamp time = Timestamp.valueOf((String)hm.get("checkout_end_date"));
+			if(time.before(now)) {
+				throw new CustomException(ErrorCode.NOT_ABLE_TO_CHECK_OUT_DUE_TO_OVERDUE);
+			}
+		}
+		
+		//6. ISBN 코드가 형식에 맞는지 확인함.
+		String book_isbn = (String) param.get("book_isbn");
+		if(!RegexUtil.checkRegex(book_isbn, RegexUtil.BOOK_ISBN_REGEX)) {
+			throw new CustomException(ErrorCode.BOOK_ISBN_NOT_MATCHED_TO_REGEX);
+		}
+		
+		//7. 해당 도서가 존재하는지 확인함.
+		HashMap book = bookDAO.readBookInfo(param);
+		if(book==null) {
+			throw new CustomException(ErrorCode.NOT_FOUND_BOOK);
+		}
+		
+		//8. 해당 도서의 재고가 유효한지 확인함.
+		Integer book_quantity = (Integer) book.get("book_quantity");
+		if(book_quantity<=0) {
+			throw new CustomException(ErrorCode.TOO_FEW_BOOK_QUANTITY);
+		}
+		
+		//9. 해당 도서가 예약했던 도서인지 아닌지 판단함.
+		param.put("limit", book_quantity);
+		List<HashMap> reservations = userDAO.readReservationInfosByBookIsbn(param);
+		
+		boolean isReserved = false;
+		
+		Iterator<HashMap> itor = reservations.iterator();
+		int cnt = 0;
+		while(itor.hasNext()) {
+			HashMap reservation = itor.next();
+			if(reservation.get("user_id").equals(param.get("user_id"))) {
+				isReserved = true;
+				break;
+			}
+			cnt++;
+		}
+
+		//10. 예약했던 도서라면 예약 우선순위에 따라 도서 대출을 처리함.
+		if(isReserved) {
+			//11. 예약 우선순위가 높다면 예약을 제거하고 도서 대출을 처리함.
+			if(cnt<book_quantity) {			
+				if(userDAO.deleteReservationByUserIdAndBookIsbn(param)!=1) {
+					throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+				}
+			//12. 예약하긴 했으나 우선순위가 낮아 대출할 수 없으면 대출을 처리하지 않음.
+			}else {
+				throw new CustomException(ErrorCode.NOT_ABLE_TO_CHECK_OUT_DUE_TO_PRIORITY_OF_RESERVATIONS);
+			}
+		//13. 예약했던 도서가 아니라면 해당 도서의 예약정보를 가져온 후 남은 재고가 예약갯수보다 많은지 확인함.
+		}else {
+			if(book_quantity <= reservations.size()) {
+				throw new CustomException(ErrorCode.NOT_ABLE_TO_CHECK_OUT_DUE_TO_TOO_MANY_RESERVATIONS);
+			}				
+		}
+		
+		//14. 대출 기록을 추가함.
+		String checkout_id = UUID.randomUUID().toString();
+		param.put("checkout_id", checkout_id);
+		userDAO.createCheckoutInfo(param);
+		
+		//15. 해당 도서의 재고를 1감소시킴
+		bookDAO.decreaseBookQuantity(param);
+	}
+
+	@Override
+	public void deleteCheckoutInfo(HttpServletRequest request, HashMap param) {
+		//1. 해당 회원정보가 DB에 실제로 존재하는지 확인함.
+		HashMap user = userDAO.readUserInfo(param);
+						
+		if(user==null) {
+			throw new CustomException(ErrorCode.NOT_FOUND_USER);
+		}
+		
+		//2. 대출 요청을 수행할 권한이 있는지 판단함.
+		String user_accesstoken = jwtUtil.getAccesstoken(request);
+		Integer user_type_id = (Integer) jwtUtil.getData(user_accesstoken, "user_type_id");
+						
+		if(user_type_id!=0) {
+			throw new CustomException(ErrorCode.NOT_AUTHORIZED);
+		}
+		
+		//3. 반납하지 않은 해당 대출의 기록이 있는지 확인함.
+		HashMap checkout = userDAO.readCheckOutInfoByUserId(param);
+		if(checkout==null) {
+			throw new CustomException(ErrorCode.NOT_FOUND_CHECKOUT);
+		}
+		
+		Timestamp begin = Timestamp.valueOf((String) checkout.get("checkout_begin_date"));
+		Timestamp end = Timestamp.valueOf((String) checkout.get("checkout_end_date"));
+		Timestamp now = new Timestamp(System.currentTimeMillis());
+		
+		//4. 연체여부를 확인함.
+		final long MILLIS_PER_DAY = 1000*60*60*24;
+		
+		if(now.after(end)) {
+			long dif = now.getTime() - end.getTime();
+			int overdue = (int) Math.ceil(dif*1.0/MILLIS_PER_DAY);
+			
+			//5. 연체했다면 현재 대출가능한 시각과 checkout_end_date중 더 나중 시간에 + overdue를 하여 새로운 대출가능한 시각으로 교체함.
+			Timestamp checkout_date = Timestamp.valueOf((String)user.get("checkout_date"));
+			Timestamp newCheckout_date;
+			
+			Calendar cal = Calendar.getInstance();
+			
+			if(checkout_date.after(end)) {
+				cal.setTime(checkout_date);
+		        cal.add(Calendar.DATE, overdue);
+		        newCheckout_date = new Timestamp(cal.getTime().getTime());
+			}else {
+				cal.setTime(end);
+		        cal.add(Calendar.DATE, overdue);
+		        newCheckout_date = new Timestamp(cal.getTime().getTime());
+			}
+			
+			param.put("newCheckout_date", newCheckout_date.toString());
+			
+			//6. 대출 가능 시각 업데이트
+			int row = userDAO.updateUserCheckOutDate(param);
+			if(row!=1) {
+				throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+			}
+		}else {
+			//7. 7일이상 대출한 책에 대해서는 포인트를 지급함
+			long dif = (now.getTime() - begin.getTime())/MILLIS_PER_DAY;
+			if(dif>=7) {
+				param.put("point_code", PointCode.RETURN_BOOK_WITHIN_7DAYS.getPOINT_CODE());
+				param.put("point_amount", PointCode.RETURN_BOOK_WITHIN_7DAYS.getPOINT_AMOUNT());
+				param.put("point_id", UUID.randomUUID().toString());
+				param.put("point_content", PointCode.RETURN_BOOK_WITHIN_7DAYS.getPOINT_MESSAGE());
+				
+				//8. 포인트 이력 추가
+				if(userDAO.createNewPointInfo(param)!=1) {
+					throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+				}
+				
+				//9. 사용자 포인트 업데이트
+				if(userDAO.increaseUserPoint(param)!=1) {
+					throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+				}
+			}
+		}
+		
+		//10. 반납을 처리함.
+		int row = userDAO.returnCheckOut(param);
+		if(row!=1) {
+			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+		}
+		
+		//11. 해당 도서의 재고를 1 증가시킴
+		param.put("book_isbn", checkout.get("book_isbn"));
+		row = bookDAO.increaseBookQuantity(param);
+		if(row!=1) {
+			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@Override
+	public void createNewReservationInfo(HttpServletRequest request, HashMap param) {
+		//1. 해당 회원정보가 DB에 실제로 존재하는지 확인함.
+		HashMap user = userDAO.readUserInfo(param);
+								
+		if(user==null) {
+			throw new CustomException(ErrorCode.NOT_FOUND_USER);
+		}
+		
+		//2. 대출 가능한 시각이 지났는지 판단함.
+		Timestamp now = new Timestamp(System.currentTimeMillis());
+		Timestamp checkout_date = Timestamp.valueOf((String) user.get("checkout_date"));
+		if(now.before(checkout_date)) {
+			throw new CustomException(ErrorCode.NOT_ABLE_TO_RESERVE_DUE_TO_DATE);
+		}
+		
+		//2. 해당 토큰으로 예약할 수 있는지 확인함.
+		String user_accesstoken = jwtUtil.getAccesstoken(request);
+		String jwt_user_id = (String) jwtUtil.getData(user_accesstoken, "user_id");
+		String user_id = (String) param.get("user_id");
+		
+		if(!(jwt_user_id!=null&&jwt_user_id.equals(user_id))) {
+			throw new CustomException(ErrorCode.NOT_AUTHORIZED);
+		}
+		
+		//3. 반납하지 않은 해당 대출중에서 연체된 대출 정보가 존재하는지 판단함.
+		List<HashMap> checkouts = userDAO.readCheckOutInfosByUserId(param);
+		for(HashMap checkout : checkouts) {
+			Timestamp begin = Timestamp.valueOf((String) checkout.get("checkout_begin_date"));
+			Timestamp end = Timestamp.valueOf((String) checkout.get("checkout_end_date"));
+			if(now.after(end)) {
+				throw new CustomException(ErrorCode.NOT_ABLE_TO_RESERVE_DUE_TO_OVERDUE);
+			}
+		}
+		
+		//4. 해당 도서를 예약한 사람이 5명 미만인지 판단함.
+		List<HashMap> list = userDAO.readReservationInfosByBookIsbn(param);
+		if(list.size()>=5) {
+			throw new CustomException(ErrorCode.NOT_ABLE_TO_RESERVE_DUE_TO_FULL);
+		}
+		
+		//5. 자신의 예약횟수가 3미만인지 판단함.
+		list = userDAO.readReservationInfosByUserId(param);
+		if(list.size()>=3) {
+			throw new CustomException(ErrorCode.NOT_ABLE_TO_RESERVE_DUE_TO_MANY);
+		}
+		
+		//6. 자신의 예약중 해당 도서가 이미 있는지 판단함.
+		for(HashMap reservation : list) {
+			String book_isbn = (String) reservation.get("book_isbn");
+			if(book_isbn.equals((String)param.get("book_isbn"))){
+				throw new CustomException(ErrorCode.DUPLICATE_BOOK_ISBN_OF_RESERVATION);
+			}
+		}
+		
+		//7. 도서 예약을 처리함.
+		param.put("reservation_id", UUID.randomUUID().toString());
+		if(userDAO.createNewReservationInfo(param)!=1) {
+			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+		}
 	}
 }

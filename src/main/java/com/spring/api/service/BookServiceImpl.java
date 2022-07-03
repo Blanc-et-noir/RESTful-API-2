@@ -16,8 +16,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartRequest;
 
+import com.spring.api.code.ErrorCode;
 import com.spring.api.dao.BookDAO;
-import com.spring.api.errorCode.ErrorCode;
 import com.spring.api.exception.CustomException;
 import com.spring.api.util.JwtUtil;
 import com.spring.api.util.RegexUtil;
@@ -115,6 +115,7 @@ public class BookServiceImpl implements BookService{
 		int row = bookDAO.createNewBookInfo(param);
 		
 		if(row!=1) {
+			System.out.println(row+"·Î¿ì");
 			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
 		}
 
@@ -206,7 +207,12 @@ public class BookServiceImpl implements BookService{
 				mfile.transferTo(file);
 			}
 		}catch(Exception e) {
+			e.printStackTrace();
 			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
 		}
+	}
+	@Override
+	public List readBookTypes() {
+		return bookDAO.readBookTypes();
 	}
 }

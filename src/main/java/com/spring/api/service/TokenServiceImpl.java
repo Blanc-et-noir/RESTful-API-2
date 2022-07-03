@@ -8,10 +8,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.spring.api.code.ErrorCode;
+import com.spring.api.code.PointCode;
 import com.spring.api.dao.TokenDAO;
+import com.spring.api.dao.UserDAO;
 import com.spring.api.encrypt.RSA2048;
 import com.spring.api.encrypt.SHA;
-import com.spring.api.errorCode.ErrorCode;
 import com.spring.api.exception.CustomException;
 import com.spring.api.util.JwtUtil;
 import com.spring.api.util.RedisUtil;
@@ -31,12 +33,14 @@ public class TokenServiceImpl implements TokenService{
 	private RedisUtil redisUtil;
 	@Autowired
 	private TokenDAO tokenDAO;
-
-	public HashMap createNewTokens(HashMap<String,String> param) {
+	@Autowired
+	private UserDAO userDAO;
+	
+	public HashMap createNewTokens(HashMap param) {
 		
-		String user_id = param.get("user_id");
-		String user_pw = param.get("user_pw");
-		String user_publickey = param.get("user_publickey");
+		String user_id = (String) param.get("user_id");
+		String user_pw = (String) param.get("user_pw");
+		String user_publickey = (String) param.get("user_publickey");
 		String user_privatekey = null;
 		
 		//공개키가 유효하지 않으면 공개키 유효성 불충족 예외 발생
@@ -83,12 +87,10 @@ public class TokenServiceImpl implements TokenService{
 		param.put("user_accesstoken", user_accesstoken);
 		param.put("user_refreshtoken", user_refreshtoken);
 		
-		int row = tokenDAO.updateUserTokens(param);
-		
-		if(row==0) {
+		if(tokenDAO.updateUserTokens(param)!=1) {
 			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
 		}
-		
+				
 		HashMap result = new HashMap();
 		result.put("user_accesstoken", user_accesstoken);
 		result.put("user_refreshtoken", user_refreshtoken);

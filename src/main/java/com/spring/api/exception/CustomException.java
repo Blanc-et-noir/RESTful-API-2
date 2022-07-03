@@ -1,6 +1,6 @@
 package com.spring.api.exception;
 
-import com.spring.api.errorCode.ErrorCode;
+import com.spring.api.code.ErrorCode;
 
 public class CustomException extends RuntimeException{
 	private ErrorCode errorCode;
