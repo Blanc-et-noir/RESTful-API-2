@@ -38,7 +38,7 @@ public enum ErrorCode {
 	//바이트초과
 	BOOK_NAME_EXCEEDED_LIMIT_ON_MAXBYTES(400,"도서 제목이 "+RegexUtil.QUESTION_ANSWER_MAXBYTES+"바이트를 초과했습니다."),
 	QUESTION_ANSWER_EXCEEDED_LIMIT_ON_MAXBYTES(400,"비밀번호 찾기 질문의 답이 "+RegexUtil.QUESTION_ANSWER_MAXBYTES+"바이트를 초과했습니다."),
-	
+	BOOK_CONTENT_TYPE_EXCEEDED_LIMIT_IN_MAXBYTES(400,"도서 장르가 "+RegexUtil.BOOK_TYPE_CONTENT_MAXBYTES+"바이트를 초과했습니다."),
 	//너무 많거나 적음
 	TOO_FEW_AUTHORS(400,"해당 도서에 등록할 저자의 수가 너무 적습니다."),
 	TOO_MANY_AUTHORS(400,"해당 도서에 등록할 저자의 수가 너무 많습니다."),

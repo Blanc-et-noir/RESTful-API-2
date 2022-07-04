@@ -69,7 +69,7 @@ public class UserController {
 	}
 	
 	@RequestMapping(value="/users/{user_id}/checkouts",method={RequestMethod.POST})
-	public ResponseEntity<HashMap> createCheckoutInfo(HttpServletRequest request, @RequestParam HashMap param, @PathVariable("user_id") String user_id){
+	public ResponseEntity<HashMap> createCheckoutInfo(HttpServletRequest request, @RequestBody HashMap param, @PathVariable("user_id") String user_id){
 		HashMap result = new HashMap();
 		param.put("user_id", user_id);
 		userService.createCheckoutInfo(request, param);
