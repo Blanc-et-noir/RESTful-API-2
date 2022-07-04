@@ -56,6 +56,11 @@
 		</foreach>
 	</insert>
 	
+	<insert id="createNewBookTypes" parameterType="java.util.HashMap">
+		INSERT INTO book_types
+		VALUES(#{book_type_id},#{book_type_content})
+	</insert>
+	
 	<update id="decreaseBookQuantity" parameterType="java.util.HashMap">
 		UPDATE books
 		SET book_quantity = book_quantity - 1

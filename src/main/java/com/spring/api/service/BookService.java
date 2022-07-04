@@ -1,5 +1,6 @@
 package com.spring.api.service;
 
+import java.util.HashMap;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -13,5 +14,7 @@ public interface BookService {
 	void createNewBookInfo(MultipartRequest mRequest,HttpServletRequest request);
 
 	List readBookTypes();
+
+	void createNewBookTypes(HttpServletRequest request, HashMap param);
 
 }

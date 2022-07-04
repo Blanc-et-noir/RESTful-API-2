@@ -346,6 +346,7 @@ public class UserServiceImpl implements UserService {
 		
 		//6. ISBN 코드가 형식에 맞는지 확인함.
 		String book_isbn = (String) param.get("book_isbn");
+		System.out.println(book_isbn);
 		if(!RegexUtil.checkRegex(book_isbn, RegexUtil.BOOK_ISBN_REGEX)) {
 			throw new CustomException(ErrorCode.BOOK_ISBN_NOT_MATCHED_TO_REGEX);
 		}
