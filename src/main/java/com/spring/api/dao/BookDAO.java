@@ -59,4 +59,12 @@ public class BookDAO {
 	public int createNewBookTypes(HashMap param) {
 		return sqlSession.insert("books.createNewBookTypes",param);
 	}
+
+	public int updateBookTypes(HashMap param) {
+		return sqlSession.update("books.updateBookTypes",param);
+	}
+
+	public int deleteBookTypes(HashMap param) {
+		return sqlSession.delete("books.deleteBookTypes",param);
+	}
 }

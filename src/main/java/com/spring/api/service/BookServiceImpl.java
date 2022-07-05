@@ -248,4 +248,70 @@ public class BookServiceImpl implements BookService{
 			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
 		}
 	}
+
+	@Override
+	public void updateBookTypes(HttpServletRequest request, HashMap param) {
+		//1. 해당 사용자가 권한이 있는지 확인
+		String user_accesstoken = jwtUtil.getAccesstoken(request);
+		String user_id = (String) jwtUtil.getData(user_accesstoken, "user_id");
+		Integer user_type_id = (Integer) jwtUtil.getData(user_accesstoken, "user_type_id");
+		param.put("user_id", user_id);
+				
+		HashMap user = bookDAO.findUserInfoByUserId(param);
+				
+		if(user == null) {
+			throw new CustomException(ErrorCode.NOT_FOUND_USER);
+		}
+						
+		if(user_type_id != 0) {
+			throw new CustomException(ErrorCode.NOT_AUTHORIZED);
+		}
+		
+		//2. 도서 장르 이름의 유효성을 판단함.
+		String book_type_content = (String) param.get("book_type_content");
+		if(!RegexUtil.checkBytes(book_type_content,RegexUtil.BOOK_TYPE_CONTENT_MAXBYTES)) {
+			throw new CustomException(ErrorCode.BOOK_CONTENT_TYPE_EXCEEDED_LIMIT_IN_MAXBYTES);
+		}
+		
+		//3. 도서 장르가 존재하는지 판단함.
+		HashMap book_type = bookDAO.findBookType(param);
+		if(book_type==null) {
+			throw new CustomException(ErrorCode.NOT_FOUND_BOOK_TYPE);
+		}
+		
+		//4. 도서 장르를 수정함.
+		if(bookDAO.updateBookTypes(param)!=1) {
+			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@Override
+	public void deleteBookTypes(HttpServletRequest request, HashMap param) {
+		//1. 해당 사용자가 권한이 있는지 확인
+		String user_accesstoken = jwtUtil.getAccesstoken(request);
+		String user_id = (String) jwtUtil.getData(user_accesstoken, "user_id");
+		Integer user_type_id = (Integer) jwtUtil.getData(user_accesstoken, "user_type_id");
+		param.put("user_id", user_id);
+						
+		HashMap user = bookDAO.findUserInfoByUserId(param);
+						
+		if(user == null) {
+			throw new CustomException(ErrorCode.NOT_FOUND_USER);
+		}
+								
+		if(user_type_id != 0) {
+			throw new CustomException(ErrorCode.NOT_AUTHORIZED);
+		}
+		
+		//2. 도서 장르가 존재하는지 판단함.
+		HashMap book_type = bookDAO.findBookType(param);
+		if(book_type==null) {
+			throw new CustomException(ErrorCode.NOT_FOUND_BOOK_TYPE);
+		}
+
+		//3. 도서 장르를 삭제함.
+		if(bookDAO.deleteBookTypes(param)!=1) {
+			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+		}
+	}
 }

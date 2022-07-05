@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -45,5 +46,26 @@ public class BookController {
 		bookService.createNewBookTypes(request, param);
 		result.put("content", "도서 장르 등록에 성공했습니다.");
 		return new ResponseEntity<HashMap>(result,HttpStatus.CREATED);
+	}
+	
+	@RequestMapping(value= {"/books/book_types/{book_type_id}"}, method= {RequestMethod.PUT})
+	public ResponseEntity<HashMap> updateBookTypes(HttpServletRequest request, @RequestBody HashMap param, @PathVariable("book_type_id") String book_type_id){
+		HashMap result = new HashMap();
+		param.put("book_type_id", book_type_id);
+		bookService.updateBookTypes(request, param);
+		result.put("flag", true);
+		result.put("content", "도서 장르 수정에 성공했습니다.");
+		return new ResponseEntity<HashMap>(result,HttpStatus.OK);
+	}
+	
+	@RequestMapping(value= {"/books/book_types/{book_type_id}"}, method= {RequestMethod.DELETE})
+	public ResponseEntity<HashMap> deleteBookTypes(HttpServletRequest request, @PathVariable("book_type_id") String book_type_id){
+		HashMap result = new HashMap();
+		HashMap param = new HashMap();
+		param.put("book_type_id", book_type_id);
+		bookService.deleteBookTypes(request, param);
+		result.put("flag", true);
+		result.put("content", "도서 장르 삭제에 성공했습니다.");
+		return new ResponseEntity<HashMap>(result,HttpStatus.OK);
 	}
 }
