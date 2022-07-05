@@ -71,4 +71,14 @@
 		SET book_quantity = book_quantity + 1
 		WHERE book_isbn = #{book_isbn}
 	</update>
+	<update id="updateBookTypes" parameterType="java.util.HashMap">
+		UPDATE book_types
+		SET book_type_content = #{book_type_content}
+		WHERE book_type_id = #{book_type_id}
+	</update>
+	
+	<delete id="deleteBookTypes" parameterType="java.util.HashMap">
+		DELETE FROM book_types
+		WHERE book_type_id = #{book_type_id} 
+	</delete>
 </mapper>

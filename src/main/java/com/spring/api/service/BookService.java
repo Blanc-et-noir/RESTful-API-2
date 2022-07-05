@@ -17,4 +17,8 @@ public interface BookService {
 
 	void createNewBookTypes(HttpServletRequest request, HashMap param);
 
+	void updateBookTypes(HttpServletRequest request, HashMap param);
+
+	void deleteBookTypes(HttpServletRequest request, HashMap param);
+
 }
