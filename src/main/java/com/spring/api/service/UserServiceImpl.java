@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -336,7 +337,14 @@ public class UserServiceImpl implements UserService {
 			throw new CustomException(ErrorCode.NOT_ABLE_TO_CHECK_OUT_DUE_TO_LIMIT);
 		}
 		
-		//5. 연체한 대출정보가 존재하는지 판단함.
+		//5. 자신이 대출하고있는 도서를 대출하려는 것인지 판단함.
+		for(HashMap checkout : list) {
+			if(((String)checkout.get("book_isbn")).equals((String)param.get("book_isbn"))) {
+				throw new CustomException(ErrorCode.NOT_ABLE_TO_CHECK_OUT_DUE_TO_ALREADY_CHECKED_OUT); 
+			}
+		}
+		
+		//6. 연체한 대출정보가 존재하는지 판단함.
 		for(HashMap hm : list) {
 			Timestamp time = Timestamp.valueOf((String)hm.get("checkout_end_date"));
 			if(time.before(now)) {
@@ -344,26 +352,25 @@ public class UserServiceImpl implements UserService {
 			}
 		}
 		
-		//6. ISBN 코드가 형식에 맞는지 확인함.
+		//7. ISBN 코드가 형식에 맞는지 확인함.
 		String book_isbn = (String) param.get("book_isbn");
-		System.out.println(book_isbn);
 		if(!RegexUtil.checkRegex(book_isbn, RegexUtil.BOOK_ISBN_REGEX)) {
 			throw new CustomException(ErrorCode.BOOK_ISBN_NOT_MATCHED_TO_REGEX);
 		}
 		
-		//7. 해당 도서가 존재하는지 확인함.
+		//8. 해당 도서가 존재하는지 확인함.
 		HashMap book = bookDAO.readBookInfo(param);
 		if(book==null) {
 			throw new CustomException(ErrorCode.NOT_FOUND_BOOK);
 		}
 		
-		//8. 해당 도서의 재고가 유효한지 확인함.
+		//9. 해당 도서의 재고가 유효한지 확인함.
 		Integer book_quantity = (Integer) book.get("book_quantity");
 		if(book_quantity<=0) {
 			throw new CustomException(ErrorCode.TOO_FEW_BOOK_QUANTITY);
 		}
 		
-		//9. 해당 도서가 예약했던 도서인지 아닌지 판단함.
+		//10. 해당 도서가 예약했던 도서인지 아닌지 판단함.
 		param.put("limit", book_quantity);
 		List<HashMap> reservations = userDAO.readReservationInfosByBookIsbn(param);
 		
@@ -375,35 +382,36 @@ public class UserServiceImpl implements UserService {
 			HashMap reservation = itor.next();
 			if(reservation.get("user_id").equals(param.get("user_id"))) {
 				isReserved = true;
+				param.put("reservation_id", reservation.get("reservation_id"));
 				break;
 			}
 			cnt++;
 		}
 
-		//10. 예약했던 도서라면 예약 우선순위에 따라 도서 대출을 처리함.
+		//11. 예약했던 도서라면 예약 우선순위에 따라 도서 대출을 처리함.
 		if(isReserved) {
-			//11. 예약 우선순위가 높다면 예약을 제거하고 도서 대출을 처리함.
+			//12. 예약 우선순위가 높다면 예약을 제거하고 도서 대출을 처리함.
 			if(cnt<book_quantity) {			
-				if(userDAO.deleteReservationByUserIdAndBookIsbn(param)!=1) {
+				if(userDAO.deleteReservation(param)!=1) {
 					throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
 				}
-			//12. 예약하긴 했으나 우선순위가 낮아 대출할 수 없으면 대출을 처리하지 않음.
+			//13. 예약하긴 했으나 우선순위가 낮아 대출할 수 없으면 대출을 처리하지 않음.
 			}else {
 				throw new CustomException(ErrorCode.NOT_ABLE_TO_CHECK_OUT_DUE_TO_PRIORITY_OF_RESERVATIONS);
 			}
-		//13. 예약했던 도서가 아니라면 해당 도서의 예약정보를 가져온 후 남은 재고가 예약갯수보다 많은지 확인함.
+		//14. 예약했던 도서가 아니라면 해당 도서의 예약정보를 가져온 후 남은 재고가 예약갯수보다 많은지 확인함.
 		}else {
 			if(book_quantity <= reservations.size()) {
 				throw new CustomException(ErrorCode.NOT_ABLE_TO_CHECK_OUT_DUE_TO_TOO_MANY_RESERVATIONS);
 			}				
 		}
 		
-		//14. 대출 기록을 추가함.
+		//15. 대출 기록을 추가함.
 		String checkout_id = UUID.randomUUID().toString();
 		param.put("checkout_id", checkout_id);
 		userDAO.createCheckoutInfo(param);
 		
-		//15. 해당 도서의 재고를 1감소시킴
+		//16. 해당 도서의 재고를 1감소시킴
 		bookDAO.decreaseBookQuantity(param);
 	}
 
@@ -534,19 +542,26 @@ public class UserServiceImpl implements UserService {
 			}
 		}
 		
-		//4. 해당 도서를 예약한 사람이 5명 미만인지 판단함.
+		//4. 자신이 대출하고있는 도서를 예약하려는 것인지 판단함.
+		for(HashMap checkout : checkouts) {
+			if(((String)checkout.get("book_isbn")).equals((String)param.get("book_isbn"))) {
+				throw new CustomException(ErrorCode.NOT_ABLE_TO_RESERVE_DUE_TO_ALREADY_CHECKED_OUT); 
+			}
+		}
+		
+		//5. 해당 도서를 예약한 사람이 5명 미만인지 판단함.
 		List<HashMap> list = userDAO.readReservationInfosByBookIsbn(param);
 		if(list.size()>=5) {
 			throw new CustomException(ErrorCode.NOT_ABLE_TO_RESERVE_DUE_TO_FULL);
 		}
 		
-		//5. 자신의 예약횟수가 3미만인지 판단함.
+		//6. 자신의 예약횟수가 3미만인지 판단함.
 		list = userDAO.readReservationInfosByUserId(param);
 		if(list.size()>=3) {
 			throw new CustomException(ErrorCode.NOT_ABLE_TO_RESERVE_DUE_TO_MANY);
 		}
 		
-		//6. 자신의 예약중 해당 도서가 이미 있는지 판단함.
+		//7. 자신의 예약중 해당 도서가 이미 있는지 판단함.
 		for(HashMap reservation : list) {
 			String book_isbn = (String) reservation.get("book_isbn");
 			if(book_isbn.equals((String)param.get("book_isbn"))){
@@ -554,10 +569,106 @@ public class UserServiceImpl implements UserService {
 			}
 		}
 		
-		//7. 도서 예약을 처리함.
+		//8. 도서 예약을 처리함.
 		param.put("reservation_id", UUID.randomUUID().toString());
 		if(userDAO.createNewReservationInfo(param)!=1) {
 			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
 		}
+	}
+
+	@Override
+	public void deleteReservationInfo(HttpServletRequest request, HashMap param) {
+		//1. 해당 회원정보가 DB에 실제로 존재하는지 확인함.
+		HashMap user = userDAO.readUserInfo(param);
+										
+		if(user==null) {
+			throw new CustomException(ErrorCode.NOT_FOUND_USER);
+		}
+		
+		//2. 해당 토큰으로 예약할 수 있는지 확인함.
+		String user_accesstoken = jwtUtil.getAccesstoken(request);
+		String jwt_user_id = (String) jwtUtil.getData(user_accesstoken, "user_id");
+		String user_id = (String) param.get("user_id");
+				
+		if(!(jwt_user_id!=null&&jwt_user_id.equals(user_id))) {
+			throw new CustomException(ErrorCode.NOT_AUTHORIZED);
+		}
+		
+		//3. 해당 예약 정보가 실제로 존재하는지 확인함.
+		HashMap reservation = userDAO.readReservationInfoByReservationId(param);
+		if(reservation==null) {
+			throw new CustomException(ErrorCode.NOT_FOUND_RESERVATION);
+		}
+		
+		//4. 해당 예약정보를 삭제함.
+		if(userDAO.deleteReservation(param)!=1) {
+			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@Override
+	public List<HashMap> readCheckoutInfo(HttpServletRequest request, HashMap param) {
+		//1. 해당 회원정보가 DB에 실제로 존재하는지 확인함.
+		HashMap user = userDAO.readUserInfo(param);								
+		if(user==null) {
+			throw new CustomException(ErrorCode.NOT_FOUND_USER);
+		}
+		
+		//2. 해당 토큰으로 대출정보를 조회할 수 있는지 확인함.
+		String user_accesstoken = jwtUtil.getAccesstoken(request);
+		String jwt_user_id = (String)jwtUtil.getData(user_accesstoken, "user_id");
+		String user_id = (String) param.get("user_id");
+		int user_type_id = (Integer)jwtUtil.getData(user_accesstoken, "user_type_id");
+		
+		if(user_type_id!=0&&!user_id.equals(jwt_user_id)) {
+			throw new CustomException(ErrorCode.NOT_AUTHORIZED);
+		}
+		
+		//3. 대출 정보를 조회함.
+		List<HashMap> checkouts = userDAO.readCheckOutInfosWithOptions(param);
+		List<HashMap> list = new LinkedList<HashMap>();
+		
+		//4. 조회한 대출 정보를 가공함.
+		for(HashMap temp : checkouts) {
+			HashMap book = new HashMap();
+			book.put("book_isbn", temp.get("book_isbn"));
+			book.put("book_name", temp.get("book_name"));
+			book.put("book_type_id", temp.get("book_type_id"));
+			book.put("book_type_content", temp.get("book_type_content"));
+			book.put("book_publisher", temp.get("book_publisher"));
+			
+			String[] book_authors = null;
+			if(temp.get("book_authors")!=null) {
+				List<String> authors = new LinkedList<String>();
+				book_authors = ((String)temp.get("book_authors")).split(" ");
+				for(String book_author_name : book_authors) {
+					authors.add(book_author_name);
+				}
+				book.put("book_authors", authors);
+			}
+			
+			String[] book_translators = null;
+			if(temp.get("book_translators")!=null) {
+				List<String> translators = new LinkedList<String>();
+				book_translators = ((String)temp.get("book_translators")).split(" ");
+				for(String book_translator_name : book_translators) {
+					translators.add(book_translator_name);
+				}
+				book.put("book_translators", translators);
+			}
+			
+			HashMap checkout = new HashMap();
+			checkout.put("checkout_id", temp.get("checkout_id"));
+			checkout.put("checkout_begin_date", temp.get("checkout_begin_date"));
+			checkout.put("checkout_end_date", temp.get("checkout_end_date"));
+			checkout.put("checkout_return_date", temp.get("checkout_return_date"));
+			checkout.put("checkout_renew_count", temp.get("checkout_renew_count"));
+			checkout.put("book", book);
+			
+			
+			list.add(checkout);
+		}
+		
+		return list;
 	}
 }

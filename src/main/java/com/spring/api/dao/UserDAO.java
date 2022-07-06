@@ -76,11 +76,20 @@ public class UserDAO {
 		return sqlSession.insert("users.createNewReservationInfo", param);
 	}
 	
-	public int deleteReservationByUserIdAndBookIsbn(HashMap param) {
-		return sqlSession.delete("users.deleteReservationByUserIdAndBookIsbn",param);		
+	public int deleteReservation(HashMap param) {
+		return sqlSession.delete("users.deleteReservation",param);		
 	}
 	
 	public int createCheckoutInfo(HashMap param) {
 		return sqlSession.insert("users.createCheckoutInfo",param);
+	}
+
+	public HashMap readReservationInfoByReservationId(HashMap param) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public List<HashMap> readCheckOutInfosWithOptions(HashMap param) {
+		return sqlSession.selectList("users.readCheckOutInfosWithOptions", param);
 	}
 }

@@ -34,6 +34,7 @@ public enum ErrorCode {
 	NOT_FOUND_BOOK(400,"해당 ISBN 코드로 등록된 도서 정보가 존재하지 않습니다."),
 	NOT_FOUND_USER(400,"해당 사용자 ID로 가입한 회원정보가 존재하지 않습니다."),
 	NOT_FOUND_CHECKOUT(400,"해당 도서 대출 정보가 존재하지 않습니다."),
+	NOT_FOUND_RESERVATION(400,"해당 도서 예약 정보가 존재하지 않습니다."),
 	
 	//바이트초과
 	BOOK_NAME_EXCEEDED_LIMIT_ON_MAXBYTES(400,"도서 제목이 "+RegexUtil.QUESTION_ANSWER_MAXBYTES+"바이트를 초과했습니다."),
@@ -56,12 +57,14 @@ public enum ErrorCode {
 	NOT_ABLE_TO_CHECK_OUT_DUE_TO_OVERDUE(400,"기존에 연체한 대출 정보가 존재하여 도서를 대출할 수 없습니다."),
 	NOT_ABLE_TO_CHECK_OUT_DUE_TO_TOO_MANY_RESERVATIONS(400,"해당 도서에 대한 예약정보가 많아 대출할 수 없습니다."),
 	NOT_ABLE_TO_CHECK_OUT_DUE_TO_PRIORITY_OF_RESERVATIONS(400,"해당 도서에 대한 예약순위가 낮아 대출할 수 없습니다."),
+	NOT_ABLE_TO_CHECK_OUT_DUE_TO_ALREADY_CHECKED_OUT(400,"현재 대출중인 도서는 대출할 수 없습니다."),
 	
-	//연장 불가
+	//예약 불가
 	NOT_ABLE_TO_RESERVE_DUE_TO_OVERDUE(400,"기존에 연체한 대출 정보가 존재하여 대출을 연장할 수 없습니다."),
 	NOT_ABLE_TO_RESERVE_DUE_TO_DATE(400,"도서 예약 가능 시각이 지나지 않았습니다."),
 	NOT_ABLE_TO_RESERVE_DUE_TO_FULL(400,"도서 예약 가능 인원이 초과되었습니다."),
 	NOT_ABLE_TO_RESERVE_DUE_TO_MANY(400,"도서 예약 가능 횟수가 초과되었습니다."),
+	NOT_ABLE_TO_RESERVE_DUE_TO_ALREADY_CHECKED_OUT(400,"현재 대출중인 도서는 예약할 수 없습니다."),
 	
 	//내부오류
 	INTERNAL_SERVER_ERROR(500,"서버 내부에서 오류가 발생했습니다.");
