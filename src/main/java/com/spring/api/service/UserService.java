@@ -1,10 +1,9 @@
 package com.spring.api.service;
 
 import java.util.HashMap;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
-
-import com.spring.api.exception.CustomException;
 
 public interface UserService {
 	public void createNewUserInfo(HashMap<String,String> param);
@@ -22,4 +21,8 @@ public interface UserService {
 	public void deleteCheckoutInfo(HttpServletRequest request, HashMap param);
 
 	public void createNewReservationInfo(HttpServletRequest request, HashMap param);
+
+	public void deleteReservationInfo(HttpServletRequest request, HashMap param);
+
+	public List<HashMap> readCheckoutInfo(HttpServletRequest request, HashMap param);
 }

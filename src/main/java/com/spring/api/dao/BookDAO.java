@@ -28,14 +28,6 @@ public class BookDAO {
 		return sqlSession.selectOne("books.findBookType", param);
 	}
 
-	public int createNewBookAuthorInfo(HashMap param) {
-		return sqlSession.insert("books.createNewBookAuthorInfo", param);
-	}
-
-	public int createNewBookTranslatorInfo(HashMap param) {
-		return sqlSession.insert("books.createNewBookTranslatorInfo", param);
-	}
-
 	public HashMap findBookInfo(HashMap param) {
 		return sqlSession.selectOne("books.findBookInfo", param);
 	}

@@ -100,6 +100,45 @@ public class BookServiceImpl implements BookService{
 			throw new CustomException(ErrorCode.NOT_FOUND_BOOK_TYPE);
 		}
 		
+		//4. 저자 이름의 유효성을 판단함.
+		String[] authors = request.getParameterValues("book_authors");
+				
+		if(authors == null||authors.length==0) {
+			throw new CustomException(ErrorCode.TOO_FEW_AUTHORS);
+		}else if(authors.length>10) {
+			throw new CustomException(ErrorCode.TOO_MANY_AUTHORS);
+		}
+		
+		String book_authors = "";
+
+		for(int i=0; i<authors.length; i++) {
+			if(!RegexUtil.checkRegex(authors[i], RegexUtil.BOOK_AUTHOR_NAME_REGEX)) {
+				throw new CustomException(ErrorCode.AUTHOR_NAME_NOT_MATCHED_TO_REGEX);
+			}
+			if(i!=authors.length-1) {
+				book_authors+=authors[i]+" ";
+			}else {
+				book_authors+=authors[i];
+			}
+		}
+		
+		//5. 번역자 이름의 유효성을 판단함.
+		String[] translators = request.getParameterValues("book_translators");
+		String book_translators = "";
+		
+		if(translators != null) {
+			for(int i=0; i<translators.length; i++) {
+				if(!RegexUtil.checkRegex(translators[i], RegexUtil.BOOK_TRANSLATOR_NAME_REGEX)) {
+					throw new CustomException(ErrorCode.TRANSLATOR_NAME_NOT_MATCHED_TO_REGEX);
+				}
+				if(i!=authors.length-1) {
+					book_translators+=translators[i]+" ";
+				}else {
+					book_translators+=translators[i];
+				}
+			}
+		}
+
 		//8. 도서 정보를 추가함.
 		param = new HashMap();
 		param.put("book_isbn", book_isbn);
@@ -107,6 +146,13 @@ public class BookServiceImpl implements BookService{
 		param.put("book_publisher", book_publisher);
 		param.put("book_type_id", book_type_id);
 		param.put("book_quantity", book_quantity);
+		param.put("book_authors", book_authors);
+		
+		if(translators!=null) {
+			param.put("book_translators", book_translators);
+		}else {
+			param.put("book_translators", null);
+		}
 		
 		String book_date = request.getParameter("book_date");
 		
@@ -119,57 +165,9 @@ public class BookServiceImpl implements BookService{
 			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
 		}
 
-		//4. 저자 이름의 유효성을 판단함.
-		String[] authors = request.getParameterValues("authors");
-		List<HashMap> list = new LinkedList<HashMap>();
-				
-		if(authors == null||authors.length==0) {
-			throw new CustomException(ErrorCode.TOO_FEW_AUTHORS);
-		}
-				
-		for(String author : authors) {
-			if(!RegexUtil.checkRegex(author, RegexUtil.BOOK_AUTHOR_NAME_REGEX)) {
-				throw new CustomException(ErrorCode.AUTHOR_NAME_NOT_MATCHED_TO_REGEX);
-			}
-			HashMap hm = new HashMap();
-			hm.put("book_isbn", book_isbn);
-			hm.put("author_name", author);
-			hm.put("author_id", UUID.randomUUID().toString());
-			list.add(hm);
-		}
-				
-		if(list.size() > 0) {
-			param = new HashMap();
-			param.put("list", list);
-			bookDAO.createNewBookAuthorInfo(param);
-		}
-
-		//5. 번역자 이름의 유효성을 판단함.
-		String[] translators = request.getParameterValues("translators");
-		list = new LinkedList<HashMap>();
-				
-		if(translators != null) {
-			for(String translator : translators) {
-				if(!RegexUtil.checkRegex(translator, RegexUtil.BOOK_TRANSLATOR_NAME_REGEX)) {
-					throw new CustomException(ErrorCode.TRANSLATOR_NAME_NOT_MATCHED_TO_REGEX);
-				}
-				HashMap hm = new HashMap();
-				hm.put("book_isbn", book_isbn);
-				hm.put("translator_name", translator);
-				hm.put("translator_id", UUID.randomUUID().toString());
-				list.add(hm);
-			}
-		}
-				
-		if(list.size()>0) {
-			param = new HashMap();
-			param.put("list", list);
-			bookDAO.createNewBookTranslatorInfo(param);
-		}
-		
 		//9. 도서 이미지 정보를 추가함.
 		List<MultipartFile> mfiles = mRequest.getFiles("book_images");
-		list = new LinkedList<HashMap>();
+		List<HashMap> list = new LinkedList<HashMap>();
 		
 		Iterator<MultipartFile> itor = mfiles.iterator();
 		
