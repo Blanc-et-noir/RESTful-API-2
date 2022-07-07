@@ -92,4 +92,8 @@ public class UserDAO {
 	public List<HashMap> readCheckOutInfosWithOptions(HashMap param) {
 		return sqlSession.selectList("users.readCheckOutInfosWithOptions", param);
 	}
+
+	public List<HashMap> readReservationInfosWithOptions(HashMap param) {
+		return sqlSession.selectList("users.readReservationInfosWithOptions", param);
+	}
 }

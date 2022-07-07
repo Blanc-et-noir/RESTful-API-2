@@ -25,4 +25,6 @@ public interface UserService {
 	public void deleteReservationInfo(HttpServletRequest request, HashMap param);
 
 	public List<HashMap> readCheckoutInfo(HttpServletRequest request, HashMap param);
+
+	public List<HashMap> readReservationInfo(HttpServletRequest request, HashMap param);
 }

@@ -671,4 +671,66 @@ public class UserServiceImpl implements UserService {
 		
 		return list;
 	}
+
+	@Override
+	public List<HashMap> readReservationInfo(HttpServletRequest request, HashMap param) {
+		//1. 해당 회원정보가 DB에 실제로 존재하는지 확인함.
+		HashMap user = userDAO.readUserInfo(param);								
+		if(user==null) {
+			throw new CustomException(ErrorCode.NOT_FOUND_USER);
+		}
+		
+		//2. 해당 토큰으로 예약정보를 조회할 수 있는지 확인함.
+		String user_accesstoken = jwtUtil.getAccesstoken(request);
+		String jwt_user_id = (String)jwtUtil.getData(user_accesstoken, "user_id");
+		String user_id = (String) param.get("user_id");
+		int user_type_id = (Integer)jwtUtil.getData(user_accesstoken, "user_type_id");
+				
+		if(user_type_id!=0&&!user_id.equals(jwt_user_id)) {
+			throw new CustomException(ErrorCode.NOT_AUTHORIZED);
+		}
+		
+		//3. 예약 정보를 조회함.
+		List<HashMap> reservations = userDAO.readReservationInfosWithOptions(param);
+		List<HashMap> list = new LinkedList<HashMap>();
+		
+		//4. 조회한 예약 정보를 가공함.
+		for(HashMap temp : reservations) {
+			HashMap book = new HashMap();
+			book.put("book_isbn", temp.get("book_isbn"));
+			book.put("book_name", temp.get("book_name"));
+			book.put("book_type_id", temp.get("book_type_id"));
+			book.put("book_type_content", temp.get("book_type_content"));
+			book.put("book_publisher", temp.get("book_publisher"));
+			
+			String[] book_authors = null;
+			if(temp.get("book_authors")!=null) {
+				List<String> authors = new LinkedList<String>();
+				book_authors = ((String)temp.get("book_authors")).split(" ");
+				for(String book_author_name : book_authors) {
+					authors.add(book_author_name);
+				}
+				book.put("book_authors", authors);
+			}
+			
+			String[] book_translators = null;
+			if(temp.get("book_translators")!=null) {
+				List<String> translators = new LinkedList<String>();
+				book_translators = ((String)temp.get("book_translators")).split(" ");
+				for(String book_translator_name : book_translators) {
+					translators.add(book_translator_name);
+				}
+				book.put("book_translators", translators);
+			}
+			
+			HashMap reservation = new HashMap();
+			reservation.put("reservation_id", temp.get("reservation_id"));
+			reservation.put("reservation_date", temp.get("reservation_date"));
+			reservation.put("book", book);
+			
+			list.add(reservation);
+		}
+		
+		return list;
+	}
 }
