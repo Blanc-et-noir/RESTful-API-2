@@ -133,4 +133,15 @@ public class UserController {
 		return new ResponseEntity<HashMap>(result,HttpStatus.OK);
 	}
 	
+	//10. 예약현황 조회
+	@RequestMapping(value="/users/{user_id}/reservations",method={RequestMethod.GET})
+	public ResponseEntity<HashMap> readReservationInfo(HttpServletRequest request,@RequestBody HashMap param, @PathVariable("user_id") String user_id){
+		HashMap result = new HashMap();
+		param.put("user_id", user_id);
+		List<HashMap> list = userService.readReservationInfo(request, param);
+		result.put("reservations", list);
+		result.put("flag", true);
+		result.put("content", "도서 예약 조회에 성공했습니다.");
+		return new ResponseEntity<HashMap>(result,HttpStatus.OK);
+	}
 }
