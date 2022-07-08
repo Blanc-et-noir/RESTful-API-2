@@ -81,7 +81,20 @@ public class TokenServiceImpl implements TokenService{
 		String user_accesstoken = jwtUtil.createToken(userVo, jwtUtil.ACCESSTOKEN_MAXAGE);
 		String user_refreshtoken = jwtUtil.createToken(userVo, jwtUtil.REFRESHTOKEN_MAXAGE);
 		
-		//4. 해당토큰을 현재 사용중인 토큰으로 업데이트
+		//4. 기존에 DB에 저장된 현재 사용중인 토큰을 로그아웃 처리함.
+		HashMap tokens = tokenDAO.getUserTokensByUserId(param);
+		String old_user_accesstoken = (String) tokens.get("user_accesstoken");
+		String old_user_refreshtoken = (String) tokens.get("user_refreshtoken");
+		
+		if(old_user_accesstoken!=null) {
+			redisUtil.setData(old_user_accesstoken, "removed", jwtUtil.getExpiration(old_user_accesstoken));
+		}
+		
+		if(old_user_refreshtoken!=null) {
+			redisUtil.setData(old_user_refreshtoken, "removed", jwtUtil.getExpiration(old_user_refreshtoken));
+		}
+		
+		//5. 해당토큰을 현재 사용중인 토큰으로 업데이트함.
 		param = new HashMap();
 		param.put("user_id", user_id);
 		param.put("user_accesstoken", user_accesstoken);
