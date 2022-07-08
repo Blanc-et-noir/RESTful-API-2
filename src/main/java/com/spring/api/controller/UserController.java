@@ -144,4 +144,17 @@ public class UserController {
 		result.put("content", "도서 예약 조회에 성공했습니다.");
 		return new ResponseEntity<HashMap>(result,HttpStatus.OK);
 	}
+	
+	//11. 대출연장
+	@RequestMapping(value="/users/{user_id}/checkouts/{checkout_id}",method={RequestMethod.PUT})
+	public ResponseEntity<HashMap> updateCheckoutInfo(HttpServletRequest request,@PathVariable("user_id") String user_id, @PathVariable("checkout_id") String checkout_id){
+		HashMap result = new HashMap();
+		HashMap param = new HashMap();
+		param.put("user_id", user_id);
+		param.put("checkout_id", checkout_id);
+		userService.updateCheckoutInfo(request, param);
+		result.put("flag", true);
+		result.put("content", "도서 대출 연장에 성공했습니다.");
+		return new ResponseEntity<HashMap>(result,HttpStatus.OK);
+	}
 }

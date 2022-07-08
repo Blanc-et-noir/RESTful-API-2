@@ -27,4 +27,6 @@ public interface UserService {
 	public List<HashMap> readCheckoutInfo(HttpServletRequest request, HashMap param);
 
 	public List<HashMap> readReservationInfo(HttpServletRequest request, HashMap param);
+
+	public void updateCheckoutInfo(HttpServletRequest request, HashMap param);
 }
