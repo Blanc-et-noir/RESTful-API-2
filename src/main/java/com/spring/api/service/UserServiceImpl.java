@@ -733,4 +733,56 @@ public class UserServiceImpl implements UserService {
 		
 		return list;
 	}
+
+	@Override
+	public void updateCheckoutInfo(HttpServletRequest request, HashMap param) {
+		//1. 해당 회원정보가 DB에 실제로 존재하는지 확인함.
+		HashMap user = userDAO.readUserInfo(param);								
+		if(user==null) {
+			throw new CustomException(ErrorCode.NOT_FOUND_USER);
+		}
+		
+		//2. 해당 토큰으로 대출을 연장할 수 있는지 확인함.
+		String user_accesstoken = jwtUtil.getAccesstoken(request);
+		String jwt_user_id = (String) jwtUtil.getData(user_accesstoken, "user_id");
+		String user_id = (String) param.get("user_id");
+						
+		if(!(jwt_user_id!=null&&jwt_user_id.equals(user_id))) {
+			throw new CustomException(ErrorCode.NOT_AUTHORIZED);
+		}
+		
+		//3. 해당 대출정보가 존재하는지 확인함.
+		HashMap checkout = userDAO.readCheckOutInfoByUserId(param);
+		if(checkout==null) {
+			throw new CustomException(ErrorCode.NOT_FOUND_CHECKOUT);
+		}
+		
+		//4. 해당 대출정보의 연장가능 횟수가 남아있는지 확인함.
+		Integer checkout_renew_count = (Integer) checkout.get("checkout_renew_count");
+		if(checkout_renew_count<=0) {
+			throw new CustomException(ErrorCode.NOT_ABLE_TO_RENEW_CHECKOUT_DUE_TO_NO_RENEW_COUNT);
+		}
+		
+		//5. 해당 도서가 존재하는지 확인함.
+		String book_isbn = (String) checkout.get("book_isbn");
+		param.put("book_isbn", book_isbn);
+		
+		HashMap book = bookDAO.readBookInfo(param);
+		if(book==null) {
+			throw new CustomException(ErrorCode.NOT_FOUND_BOOK);
+		}
+		
+		//6. 대출 연장 가능 여부를 판단함.
+		List<HashMap> reservations = userDAO.readReservationInfosByBookIsbn(param);
+		Integer book_quantity = (Integer) book.get("book_quantity");
+		
+		if(book_quantity<reservations.size()) {
+			throw new CustomException(ErrorCode.NOT_ABLE_TO_RENEW_CHECKOUT_DUE_TO_TOO_MANY_RESERVATIONS);
+		}
+		
+		//7. 대출 연장을 처리함.
+		if(userDAO.updateCheckoutInfo(param)!=1) {
+			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+		}
+	}
 }

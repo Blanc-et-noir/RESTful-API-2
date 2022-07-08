@@ -130,6 +130,11 @@
 		SET user_points = user_points + ${point_amount}
 		WHERE user_id = #{user_id}
 	</update>
+	<update id="updateCheckoutInfo" parameterType="java.util.HashMap">
+		UPDATE checkouts
+		SET checkout_end_date = DATE_ADD(checkout_end_date, INTERVAL 7 DAY), checkout_renew_count = checkout_renew_count - 1
+		WHERE checkout_id = #{checkout_id} AND user_id = #{user_id}
+	</update>
 	
 	<delete id="deleteReservation" parameterType="java.util.HashMap">
 		DELETE FROM reservations

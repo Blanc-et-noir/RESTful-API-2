@@ -40,6 +40,7 @@ public enum ErrorCode {
 	BOOK_NAME_EXCEEDED_LIMIT_ON_MAXBYTES(400,"도서 제목이 "+RegexUtil.QUESTION_ANSWER_MAXBYTES+"바이트를 초과했습니다."),
 	QUESTION_ANSWER_EXCEEDED_LIMIT_ON_MAXBYTES(400,"비밀번호 찾기 질문의 답이 "+RegexUtil.QUESTION_ANSWER_MAXBYTES+"바이트를 초과했습니다."),
 	BOOK_CONTENT_TYPE_EXCEEDED_LIMIT_IN_MAXBYTES(400,"도서 장르가 "+RegexUtil.BOOK_TYPE_CONTENT_MAXBYTES+"바이트를 초과했습니다."),
+	
 	//너무 많거나 적음
 	TOO_FEW_AUTHORS(400,"해당 도서에 등록할 저자의 수가 너무 적습니다."),
 	TOO_MANY_AUTHORS(400,"해당 도서에 등록할 저자의 수가 너무 많습니다."),
@@ -65,6 +66,10 @@ public enum ErrorCode {
 	NOT_ABLE_TO_RESERVE_DUE_TO_FULL(400,"도서 예약 가능 인원이 초과되었습니다."),
 	NOT_ABLE_TO_RESERVE_DUE_TO_MANY(400,"도서 예약 가능 횟수가 초과되었습니다."),
 	NOT_ABLE_TO_RESERVE_DUE_TO_ALREADY_CHECKED_OUT(400,"현재 대출중인 도서는 예약할 수 없습니다."),
+	
+	//연장 불가
+	NOT_ABLE_TO_RENEW_CHECKOUT_DUE_TO_NO_RENEW_COUNT(400,"대출 연장 가능 횟수를 모두 소진하여 대출을 연장할 수 없습니다."),
+	NOT_ABLE_TO_RENEW_CHECKOUT_DUE_TO_TOO_MANY_RESERVATIONS(400,"해당 도서 대출을 예약한 사용자가 많아 대출을 연장할 수 없습니다."),
 	
 	//내부오류
 	INTERNAL_SERVER_ERROR(500,"서버 내부에서 오류가 발생했습니다.");
