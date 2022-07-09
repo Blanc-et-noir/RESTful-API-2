@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="messages">
+	<select id="readMessages" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT message_id, message_title, message_content, DATE_FORMAT(message_date,'%Y-%m-%d %T') AS "message_date", message_sender_id, message_receiver_id
+		FROM messages
+		WHERE
+		<choose>
+			<when test="message_type == 'receive'">
+				message_receiver_id = #{user_id} AND message_receiver_remove_flag = 'N'
+			</when>
+			<otherwise>
+				message_sender_id = #{user_id} AND message_sender_remove_flag = 'N'
+			</otherwise>
+		</choose>
+		<if test="search_begin_date != null">
+			<![CDATA[AND DATE_FORMAT(message_date,'%Y-%m-%d %T') >= DATE_FORMAT(#{search_begin_date},'%Y-%m-%d %T')]]>
+		</if>
+		<if test="search_end_date != null">
+			<![CDATA[AND DATE_FORMAT(message_date,'%Y-%m-%d %T') >= DATE_FORMAT(#{search_end_date},'%Y-%m-%d %T')]]>
+		</if>
+		ORDER BY message_date DESC
+		LIMIT 10 OFFSET ${offset}
+	</select>
+	<select id="readMessageByMessageId" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT *
+		FROM messages
+		WHERE message_id = #{message_id} AND ((message_receiver_id = #{user_id} AND message_receiver_remove_flag = 'N') OR (message_sender_id = #{user_id} AND message_sender_remove_flag = 'N'))
+	</select>
+	
+	<update id="deleteMessage" parameterType="java.util.HashMap">
+		UPDATE messages
+		<set>
+			<if test="remove_from_send == true">
+				message_sender_remove_flag = 'Y'
+			</if>
+			<if test="remove_from_receive == true">
+				message_receiver_remove_flag = 'Y'
+			</if>
+		</set>
+		WHERE message_id = #{message_id}
+	</update>
+	
+	<insert id="createNewMessage" parameterType="java.util.HashMap">
+		INSERT INTO messages
+		VALUES(#{message_id},#{message_title},#{message_content}, DATE_FORMAT(NOW(),'%Y-%m-%d %T'), #{message_sender_id},#{message_receiver_id},'N','N');
+	</insert>
+</mapper>

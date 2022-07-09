@@ -22,6 +22,7 @@ public enum ErrorCode {
 	USER_PW_NOT_MATCHED_TO_REGEX(400,"해당 사용자 PW 형식이 올바르지 않습니다."),
 	UUID_NOT_MATCHED_TO_REGEX(400,"해당 UUID 형식이 올바르지 않습니다."),
 	QUESTION_ANSWER_REQUIRED(400,"비밀번호 찾기 질문에 대한 답을 전달해야합니다."),
+	DATE_NOT_MATCHED_TO_REGEX(400,"날짜 형식이 올바르지 않습니다."),
 	
 	//중복
 	DUPLICATE_USER_ID(400,"해당 사용자 ID는 이미 사용중입니다."),
@@ -35,16 +36,20 @@ public enum ErrorCode {
 	NOT_FOUND_USER(400,"해당 사용자 ID로 가입한 회원정보가 존재하지 않습니다."),
 	NOT_FOUND_CHECKOUT(400,"해당 도서 대출 정보가 존재하지 않습니다."),
 	NOT_FOUND_RESERVATION(400,"해당 도서 예약 정보가 존재하지 않습니다."),
+	NOT_FOUND_MESSAGE(400,"해당 메세지 정보가 존재하지 않습니다."),
 	
 	//바이트초과
 	BOOK_NAME_EXCEEDED_LIMIT_ON_MAXBYTES(400,"도서 제목이 "+RegexUtil.QUESTION_ANSWER_MAXBYTES+"바이트를 초과했습니다."),
 	QUESTION_ANSWER_EXCEEDED_LIMIT_ON_MAXBYTES(400,"비밀번호 찾기 질문의 답이 "+RegexUtil.QUESTION_ANSWER_MAXBYTES+"바이트를 초과했습니다."),
 	BOOK_CONTENT_TYPE_EXCEEDED_LIMIT_IN_MAXBYTES(400,"도서 장르가 "+RegexUtil.BOOK_TYPE_CONTENT_MAXBYTES+"바이트를 초과했습니다."),
+	MESSAGE_TITLE_EXCEEDED_LIMIT_IN_MAXBYTES(400,"메세지 제목이 "+RegexUtil.MESSAGE_TITLE_MAXBYTES+"바이트를 초과했습니다."),
+	MESSAGE_CONTENT_EXCEEDED_LIMIT_IN_MAXBYTES(400,"메세지 내용이 "+RegexUtil.MESSAGE_CONTENT_MAXBYTES+"바이트를 초과했습니다."),
 	
 	//너무 많거나 적음
 	TOO_FEW_AUTHORS(400,"해당 도서에 등록할 저자의 수가 너무 적습니다."),
 	TOO_MANY_AUTHORS(400,"해당 도서에 등록할 저자의 수가 너무 많습니다."),
 	TOO_FEW_BOOK_QUANTITY(400,"해당 도서의 재고가 너무 적습니다."),
+	TOO_LOW_MESSAGE_OFFSET(400,"메세지 offset 값이 너무 작습니다."),
 	
 	//권한없음
 	NOT_AUTHORIZED(403,"해당 작업을 요청할 권한이 없습니다."),
