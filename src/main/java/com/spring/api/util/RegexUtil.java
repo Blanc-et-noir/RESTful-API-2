@@ -10,10 +10,13 @@ public class RegexUtil {
 	public final static String BOOK_AUTHOR_NAME_REGEX = "^[a-zA-Z°¡-ÆR]{1,20}";
 	public final static String BOOK_ISBN_REGEX = "^[0-9]{13,13}";
 	public final static String BOOK_PUBLISHER_NAME_REGEX = "^[a-zA-Z°¡-ÆR]{1,20}";
+	public final static String DATE_REGEX = "^([12]\\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01]))$";
 	
 	public final static int QUESTION_ANSWER_MAXBYTES = 512;
 	public final static int BOOK_NAME_MAXBYTES = 120;
 	public final static int BOOK_TYPE_CONTENT_MAXBYTES = 60;
+	public final static int MESSAGE_CONTENT_MAXBYTES = 900;
+	public final static int MESSAGE_TITLE_MAXBYTES = 300;
 	
 	public static boolean checkBytes(String str, final int maxLength) {
 		if(str==null) {
