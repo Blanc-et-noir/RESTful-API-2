@@ -1,4 +1,4 @@
-### RESTful API
+### RESTful API : 도서 관리 서비스
 
 <br>
 
@@ -116,6 +116,61 @@
 * **[기능]** 현재 대출 가능한 시각과 반납날짜중 더 최신의 날짜 + 연체일수로 계산함.
 * **[기능]** 도서 연체시 연체일수당 마일리지 3점을 감소시킴.
 * **[기능]** 7일 이상 대출한 도서 정상반납시에 마일리지 2점을 부여함.
+
+</details>
+
+<br>
+
+<details>
+<summary>추후작성</summary>
+
+<br>
+
+* **[기능]** 추후작성
+
+</details>
+
+<br>
+
+<details>
+<summary>추후작성</summary>
+
+<br>
+
+* **[기능]** 추후작성
+
+</details>
+
+<br>
+
+<details>
+<summary>추후작성</summary>
+
+<br>
+
+* **[기능]** 추후작성
+
+</details>
+
+<br>
+
+<details>
+<summary>추후작성</summary>
+
+<br>
+
+* **[기능]** 추후작성
+
+</details>
+
+<br>
+
+<details>
+<summary>추후작성</summary>
+
+<br>
+
+* **[기능]** 추후작성
 
 </details>
 <hr>
