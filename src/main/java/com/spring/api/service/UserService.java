@@ -12,8 +12,6 @@ public interface UserService {
 
 	public void deleteUserInfo(HashMap<String,String> param);
 	
-	public String createNewUserKeys();
-
 	public void updateUserInfo(HttpServletRequest request, HashMap<String, String> param);
 
 	public void createCheckoutInfo(HttpServletRequest request, HashMap param);

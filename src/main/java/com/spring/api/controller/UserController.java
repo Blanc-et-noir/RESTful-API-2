@@ -23,6 +23,7 @@ public class UserController {
 	private UserService userService;
 	
 	//1. 공개키 발급
+	/*
 	@RequestMapping(value="/users/publickeys",method=RequestMethod.GET)
 	public ResponseEntity<HashMap> createNewUserKeys() throws CustomException, Exception {
 		HashMap result = new HashMap();
@@ -31,6 +32,7 @@ public class UserController {
 		result.put("user_publickey", userService.createNewUserKeys());
 		return new ResponseEntity<HashMap>(result,HttpStatus.OK);
 	}
+	*/
 	
 	//2. 회원가입
 	@RequestMapping(value="/users",method=RequestMethod.POST)

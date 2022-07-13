@@ -62,7 +62,7 @@ public class AccesstokenInterceptor implements HandlerInterceptor{
 			System.out.println("1");
 			return true;
 		//2. 공개키 발급 또는 도서 장르 조회는 액세스 토큰이 필요 없음.
-		}else if((uri.equals("/api/users/publickeys")||uri.equals("/api/books/book_types"))&&method.equalsIgnoreCase("GET")) {
+		}else if((/*uri.equals("/api/users/publickeys")||*/uri.equals("/api/books/book_types"))&&method.equalsIgnoreCase("GET")) {
 			System.out.println("2");
 			return true;
 		}

@@ -40,15 +40,15 @@ public class TokenServiceImpl implements TokenService{
 		
 		String user_id = (String) param.get("user_id");
 		String user_pw = (String) param.get("user_pw");
-		String user_publickey = (String) param.get("user_publickey");
-		String user_privatekey = null;
+		//String user_publickey = (String) param.get("user_publickey");
+		//String user_privatekey = null;
 		
 		//공개키가 유효하지 않으면 공개키 유효성 불충족 예외 발생
-		if((user_privatekey = (String) redisUtil.getData(user_publickey))==null) {
-			throw new CustomException(ErrorCode.INVALID_PUBLICKEY);
-		}
+		//if((user_privatekey = (String) redisUtil.getData(user_publickey))==null) {
+			//throw new CustomException(ErrorCode.INVALID_PUBLICKEY);
+		//}
 		
-		user_pw = RSA2048.decrypt(user_pw, user_privatekey);
+		//user_pw = RSA2048.decrypt(user_pw, user_privatekey);
 		HashMap<String,Object> user = null;
 		
 		//1. 아이디가 정규식에 적합하다면 실제로 존재하는 아이디인지 확인, 없으면 예외
@@ -82,9 +82,9 @@ public class TokenServiceImpl implements TokenService{
 		String user_refreshtoken = jwtUtil.createToken(userVo, jwtUtil.REFRESHTOKEN_MAXAGE);
 		
 		//4. 기존에 DB에 저장된 현재 사용중인 토큰을 로그아웃 처리함.
-		HashMap tokens = tokenDAO.getUserTokensByUserId(param);
-		String old_user_accesstoken = (String) tokens.get("user_accesstoken");
-		String old_user_refreshtoken = (String) tokens.get("user_refreshtoken");
+		HashMap<String,String> tokens = tokenDAO.getUserTokensByUserId(param);
+		String old_user_accesstoken = tokens.get("user_accesstoken");
+		String old_user_refreshtoken = tokens.get("user_refreshtoken");
 		
 		if(old_user_accesstoken!=null) {
 			redisUtil.setData(old_user_accesstoken, "removed", jwtUtil.getExpiration(old_user_accesstoken));

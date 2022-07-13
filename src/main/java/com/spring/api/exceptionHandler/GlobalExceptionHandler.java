@@ -1,5 +1,7 @@
 package com.spring.api.exceptionHandler;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.HashMap;
 
 import org.springframework.http.HttpStatus;
@@ -30,6 +32,10 @@ public class GlobalExceptionHandler {
 		result.put("flag", false);
 		result.put("content", "서버 내부에서 오류가 발생했습니다.");
 		
+		StringWriter errors = new StringWriter();
+        e.printStackTrace(new PrintWriter(errors));
+         
+		result.put("errors", errors.toString());
 		return new ResponseEntity<HashMap>(result,HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 }

@@ -43,6 +43,7 @@ public class UserServiceImpl implements UserService {
 	private BookDAO bookDAO;
 	
 	//공개키 및 비밀키를 생성하고, 공개키는 클라이언트에게 반환, 비밀키는 Redis에 일정시간동안 저장하는 로직.
+	/*
 	@Override
 	public String createNewUserKeys() {
 		HashMap<String,String> keyPair = RSA2048.createKeys();
@@ -54,6 +55,7 @@ public class UserServiceImpl implements UserService {
 		System.out.println(redisUtil.getData(user_publickey));
 		return user_publickey;
 	}
+	*/
 	
 	//회원가입 요청을 처리하는 로직.
 	@Override
@@ -61,17 +63,17 @@ public class UserServiceImpl implements UserService {
 		String user_id = param.get("user_id");
 		String user_pw = param.get("user_pw");
 		String user_name = param.get("user_name");
-		String user_publickey = param.get("user_publickey");
-		String user_privatekey = null;
+		//String user_publickey = param.get("user_publickey");
+		//String user_privatekey = null;
 		String user_phone = param.get("user_phone");
 		String question_id = param.get("question_id");
 		String question_answer = param.get("question_answer");
 		
 		//1. 공개키가 유효하지 않으면 공개키 유효성 불충족 예외가 발생함.
 		//   비밀키가 Redis에 저장될 수 있는 시간이 지났거나, 공개키 자체가 유효하지 않을때 발생함.
-		if((user_privatekey = (String) redisUtil.getData(user_publickey))==null) {
-			throw new CustomException(ErrorCode.INVALID_PUBLICKEY);
-		}
+		//if((user_privatekey = (String) redisUtil.getData(user_publickey))==null) {
+			//throw new CustomException(ErrorCode.INVALID_PUBLICKEY);
+		//}
 
 		//2. ID가 전달되지 않았거나, 정규식을 만족하지 않으면 예외가 발생함.
 		if(!RegexUtil.checkRegex(user_id,RegexUtil.USER_ID_REGEX)) {
@@ -89,7 +91,7 @@ public class UserServiceImpl implements UserService {
 		}
 		
 		//4. 비밀번호가 정규식에 부합하지않으면 예외가 발생함.
-		user_pw = RSA2048.decrypt(user_pw, user_privatekey);
+		//user_pw = RSA2048.decrypt(user_pw, user_privatekey);
 		if(!RegexUtil.checkRegex(user_pw,RegexUtil.USER_PW_REGEX)) {
 			throw new CustomException(ErrorCode.USER_PW_NOT_MATCHED_TO_REGEX);
 		}
@@ -120,7 +122,7 @@ public class UserServiceImpl implements UserService {
 		}
 		
 		//9. 비밀번호 찾기 질문에 대한 답이 특정 바이트이상의 크기를 갖는다면 예외가 발생함. 
-		question_answer = RSA2048.decrypt(question_answer, user_privatekey).replaceAll(" ", "");
+		question_answer = question_answer.replaceAll(" ", "");
 		if(!RegexUtil.checkBytes(question_answer,RegexUtil.QUESTION_ANSWER_MAXBYTES)) {
 			throw new CustomException(ErrorCode.QUESTION_ANSWER_EXCEEDED_LIMIT_ON_MAXBYTES);
 		}
@@ -208,17 +210,18 @@ public class UserServiceImpl implements UserService {
 		String user_salt = (String) user.get("user_salt");
 		String question_answer = (String) param.get("question_answer");
 		String user_publickey = (String) param.get("user_publickey");
-		String user_privatekey = (String) redisUtil.getData(user_publickey);
+		//String user_privatekey = (String) redisUtil.getData(user_publickey);
 		
-		if(user_privatekey==null) {
-			throw new CustomException(ErrorCode.INVALID_PUBLICKEY);
-		}
+		//if(user_privatekey==null) {
+			//throw new CustomException(ErrorCode.INVALID_PUBLICKEY);
+		//}
 		
 		if(question_answer==null) {
 			throw new CustomException(ErrorCode.QUESTION_ANSWER_REQUIRED);
 		}
 		
-		question_answer = SHA.DSHA512(RSA2048.decrypt(question_answer, user_privatekey).replaceAll(" ", ""),user_salt);
+		//복호화과정 삭제
+		question_answer = SHA.DSHA512(question_answer.replaceAll(" ", ""),user_salt);
 		
 		if(!question_answer.equals((String)user.get("question_answer"))){
 			throw new CustomException(ErrorCode.QUESTION_ANSWER_NOT_MATCHED);
@@ -240,7 +243,7 @@ public class UserServiceImpl implements UserService {
 		String new_user_pw = (String) param.get("new_user_pw");
 		
 		if(new_user_pw!=null) {
-			new_user_pw = RSA2048.decrypt(new_user_pw, user_privatekey);
+			//new_user_pw = RSA2048.decrypt(new_user_pw, user_privatekey);
 			if(RegexUtil.checkRegex(new_user_pw, RegexUtil.USER_PW_REGEX)) {
 				new_user_pw = SHA.DSHA512(new_user_pw, new_user_salt);
 				param.put("new_user_salt", new_user_salt);
@@ -265,7 +268,9 @@ public class UserServiceImpl implements UserService {
 		//7. 비밀번호 찾기 질문의 정답 변경시에는 해당 답이 특정 바이트 이하의 크기여야함.
 		String new_question_answer = (String) param.get("new_question_answer");
 		if(new_question_answer!=null) {
-			new_question_answer = RSA2048.decrypt(new_question_answer, user_privatekey).replaceAll(" ", "");
+			
+			new_question_answer = new_question_answer.replaceAll(" ", "");
+			
 			if(RegexUtil.checkBytes(new_question_answer, RegexUtil.QUESTION_ANSWER_MAXBYTES)) {
 				new_question_answer = SHA.DSHA512(new_question_answer, new_user_salt);
 				param.put("new_user_salt", new_user_salt);
@@ -303,7 +308,6 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public void deleteUserInfo(HashMap<String,String> param) {
 		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
