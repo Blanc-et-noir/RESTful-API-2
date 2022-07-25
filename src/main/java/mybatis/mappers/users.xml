@@ -48,26 +48,26 @@
 		FROM checkouts NATURAL JOIN books NATURAL JOIN book_types
 		WHERE user_id = #{user_id}
 		<choose>
-			<when test="isReturned == true">
+			<when test='isReturned!=null and isReturned.equals("Y")'>
 				AND checkout_return_date IS NOT NULL
 			</when>
-			<when test="isReturned == false">
+			<when test='isReturned!=null and isReturned.equals("N")'>
 				AND checkout_return_date IS NULL
 			</when>
 		</choose>
 		<choose>
-			<when test="isOverdue == true">
+			<when test='isOverdue!=null and isOverdue.equals("Y")'>
 				<![CDATA[AND checkout_end_date < NOW()]]>
 			</when>
-			<when test="isOverdue == false">
+			<when test='isOverdue!=null and isOverdue.equals("N")'>
 				<![CDATA[AND checkout_end_date >= NOW()]]>
 			</when>
 		</choose>
-		<if test="search_begin_date != null">
-			<![CDATA[AND DATE_FORMAT(checkout_begin_date,'%Y-%m-%d %T') > DATE_FORMAT(#{search_begin_date},'%Y-%m-%d %T')]]>
+		<if test="checkout_begin_date != null">
+			<![CDATA[AND DATE_FORMAT(checkout_begin_date,'%Y-%m-%d %T') > DATE_FORMAT(#{checkout_begin_date},'%Y-%m-%d %T')]]>
 		</if>
-		<if test="search_end_date != null">
-			<![CDATA[AND DATE_FORMAT(checkout_begin_date,'%Y-%m-%d %T') < DATE_FORMAT(#{search_end_date},'%Y-%m-%d %T')]]>
+		<if test="checkout_end_date != null">
+			<![CDATA[AND DATE_FORMAT(checkout_begin_date,'%Y-%m-%d %T') < DATE_FORMAT(#{checkout_end_date},'%Y-%m-%d %T')]]>
 		</if>
 		ORDER BY DATE_FORMAT(checkout_begin_date,"%Y-%m-%d %T") DESC
 	</select>
@@ -75,15 +75,19 @@
 		SELECT reservation_id, user_id, book_isbn, book_name,book_type_id,book_type_content,book_authors, book_translators,book_publisher, DATE_FORMAT(reservation_date,"%Y-%m-%d %T") AS "reservation_date"
 		FROM reservations NATURAL JOIN books NATURAL JOIN book_types
 		WHERE user_id = #{user_id}
-		<if test="search_begin_date != null">
-			<![CDATA[AND DATE_FORMAT(reservation_date,'%Y-%m-%d %T') > DATE_FORMAT(#{search_begin_date},'%Y-%m-%d %T')]]>
+		<if test="reservation_begin_date != null">
+			<![CDATA[AND DATE_FORMAT(reservation_date,'%Y-%m-%d %T') > DATE_FORMAT(#{reservation_begin_date},'%Y-%m-%d %T')]]>
 		</if>
-		<if test="search_end_date != null">
-			<![CDATA[AND DATE_FORMAT(reservation_date,'%Y-%m-%d %T') < DATE_FORMAT(#{search_end_date},'%Y-%m-%d %T')]]>
+		<if test="reservation_end_date != null">
+			<![CDATA[AND DATE_FORMAT(reservation_date,'%Y-%m-%d %T') < DATE_FORMAT(#{reservation_end_date},'%Y-%m-%d %T')]]>
 		</if>
 		ORDER BY DATE_FORMAT(reservation_date,"%Y-%m-%d %T") DESC
 	</select>
-	
+	<select id="readQuestions" resultType="java.util.HashMap">
+		SELECT *
+		FROM questions
+		ORDER BY question_id ASC
+	</select>	
 	<insert id="createNewUserInfo" parameterType="java.util.HashMap">
 		INSERT INTO users(user_id, user_pw, user_name, user_phone, question_id, question_answer, user_salt, user_point, user_type_id, checkout_date)
 		VALUES(

@@ -23,6 +23,7 @@ public enum ErrorCode {
 	UUID_NOT_MATCHED_TO_REGEX(400,"해당 UUID 형식이 올바르지 않습니다."),
 	QUESTION_ANSWER_REQUIRED(400,"비밀번호 찾기 질문에 대한 답을 전달해야합니다."),
 	DATE_NOT_MATCHED_TO_REGEX(400,"날짜 형식이 올바르지 않습니다."),
+	SEARCH_FLAG_NOT_MATCHED_TO_REGEX(400,"검색 조건 형식이 올바르지 않습니다."),
 	
 	//중복
 	DUPLICATE_USER_ID(400,"해당 사용자 ID는 이미 사용중입니다."),

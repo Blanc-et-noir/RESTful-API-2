@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.spring.api.exception.CustomException;
 import com.spring.api.service.UserService;
 
 @RestController("userController")
@@ -110,7 +110,7 @@ public class UserController {
 		return new ResponseEntity<HashMap>(result,HttpStatus.OK);
 	}
 	
-	//8. 도서예약
+	//8. 도서예약 취소
 	@RequestMapping(value="/users/{user_id}/reservations/{reservation_id}",method={RequestMethod.DELETE})
 	public ResponseEntity<HashMap> deleteReservationInfo(HttpServletRequest request, @PathVariable("user_id") String user_id, @PathVariable("reservation_id") String reservation_id){
 		HashMap result = new HashMap();
@@ -125,7 +125,7 @@ public class UserController {
 	
 	//9. 대출현황 조회
 	@RequestMapping(value="/users/{user_id}/checkouts",method={RequestMethod.GET})
-	public ResponseEntity<HashMap> readCheckoutInfo(HttpServletRequest request,@RequestBody HashMap param, @PathVariable("user_id") String user_id){
+	public ResponseEntity<HashMap> readCheckoutInfo(HttpServletRequest request, @RequestParam HashMap param, @PathVariable("user_id") String user_id){
 		HashMap result = new HashMap();
 		param.put("user_id", user_id);
 		List<HashMap> list = userService.readCheckoutInfo(request, param);
@@ -137,7 +137,7 @@ public class UserController {
 	
 	//10. 예약현황 조회
 	@RequestMapping(value="/users/{user_id}/reservations",method={RequestMethod.GET})
-	public ResponseEntity<HashMap> readReservationInfo(HttpServletRequest request,@RequestBody HashMap param, @PathVariable("user_id") String user_id){
+	public ResponseEntity<HashMap> readReservationInfo(HttpServletRequest request,@RequestParam HashMap param, @PathVariable("user_id") String user_id){
 		HashMap result = new HashMap();
 		param.put("user_id", user_id);
 		List<HashMap> list = userService.readReservationInfo(request, param);
@@ -157,6 +157,16 @@ public class UserController {
 		userService.updateCheckoutInfo(request, param);
 		result.put("flag", true);
 		result.put("content", "도서 대출 연장에 성공했습니다.");
+		return new ResponseEntity<HashMap>(result,HttpStatus.OK);
+	}
+	
+	//12. 비밀번호 찾기 질문 목록 발급
+	@RequestMapping(value="/users/questions",method={RequestMethod.GET})
+	public ResponseEntity<HashMap> readQuestions(){
+		HashMap result = new HashMap();
+		result.put("flag", true);
+		result.put("questions", userService.readQuestions());
+		result.put("content", "비밀번호 찾기 질문 목록 발급에 성공했습니다.");
 		return new ResponseEntity<HashMap>(result,HttpStatus.OK);
 	}
 }
