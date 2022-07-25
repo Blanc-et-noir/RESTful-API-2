@@ -628,11 +628,33 @@ public class UserServiceImpl implements UserService {
 			throw new CustomException(ErrorCode.NOT_AUTHORIZED);
 		}
 		
-		//3. 대출 정보를 조회함.
+		//3. 검색 날짜 형식이 적절한지 판단함.
+		String checkout_begin_date = (String)param.get("checkout_begin_date");
+		if(checkout_begin_date!=null&&!RegexUtil.checkRegex(checkout_begin_date, RegexUtil.DATE_REGEX)) {
+			throw new CustomException(ErrorCode.DATE_NOT_MATCHED_TO_REGEX);
+		}
+		
+		String checkout_end_date = (String)param.get("checkout_end_date");
+		if(checkout_end_date!=null&&!RegexUtil.checkRegex(checkout_end_date, RegexUtil.DATE_REGEX)) {
+			throw new CustomException(ErrorCode.DATE_NOT_MATCHED_TO_REGEX);
+		}
+		
+		//4. 검색 조건 형식이 적절한지 판단함.
+		String isReturned = (String)param.get("isReturned");
+		if(isReturned!=null&&!(isReturned.equalsIgnoreCase("Y")||isReturned.equalsIgnoreCase("N"))) {
+			throw new CustomException(ErrorCode.SEARCH_FLAG_NOT_MATCHED_TO_REGEX);
+		}
+		
+		String isOverdue = (String)param.get("isOverdue");
+		if(isOverdue!=null&&!(isOverdue.equalsIgnoreCase("Y")||isOverdue.equalsIgnoreCase("N"))) {
+			throw new CustomException(ErrorCode.SEARCH_FLAG_NOT_MATCHED_TO_REGEX);
+		}
+		
+		//5. 대출 정보를 조회함.
 		List<HashMap> checkouts = userDAO.readCheckOutInfosWithOptions(param);
 		List<HashMap> list = new LinkedList<HashMap>();
 		
-		//4. 조회한 대출 정보를 가공함.
+		//6. 조회한 대출 정보를 가공함.
 		for(HashMap temp : checkouts) {
 			HashMap book = new HashMap();
 			book.put("book_isbn", temp.get("book_isbn"));
@@ -694,11 +716,22 @@ public class UserServiceImpl implements UserService {
 			throw new CustomException(ErrorCode.NOT_AUTHORIZED);
 		}
 		
-		//3. 예약 정보를 조회함.
+		//3. 검색 날짜 형식이 적절한지 판단함.
+		String reservation_begin_date = (String)param.get("reservation_begin_date");
+		if(reservation_begin_date!=null&&!RegexUtil.checkRegex(reservation_begin_date, RegexUtil.DATE_REGEX)) {
+			throw new CustomException(ErrorCode.DATE_NOT_MATCHED_TO_REGEX);
+		}
+		
+		String reservation_end_date = (String)param.get("reservation_end_date");
+		if(reservation_end_date!=null&&!RegexUtil.checkRegex(reservation_end_date, RegexUtil.DATE_REGEX)) {
+			throw new CustomException(ErrorCode.DATE_NOT_MATCHED_TO_REGEX);
+		}
+		
+		//4. 예약 정보를 조회함.
 		List<HashMap> reservations = userDAO.readReservationInfosWithOptions(param);
 		List<HashMap> list = new LinkedList<HashMap>();
 		
-		//4. 조회한 예약 정보를 가공함.
+		//5. 조회한 예약 정보를 가공함.
 		for(HashMap temp : reservations) {
 			HashMap book = new HashMap();
 			book.put("book_isbn", temp.get("book_isbn"));
@@ -788,5 +821,10 @@ public class UserServiceImpl implements UserService {
 		if(userDAO.updateCheckoutInfo(param)!=1) {
 			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
 		}
+	}
+
+	@Override
+	public List<HashMap> readQuestions() {
+		return userDAO.readQuestions();
 	}
 }

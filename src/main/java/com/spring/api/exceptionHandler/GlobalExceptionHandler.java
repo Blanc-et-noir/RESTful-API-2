@@ -22,6 +22,11 @@ public class GlobalExceptionHandler {
 		result.put("flag", false);
 		result.put("content", errorCode.getERROR_MESSAGE());
 		
+		StringWriter errors = new StringWriter();
+        e.printStackTrace(new PrintWriter(errors));
+         
+		result.put("errors", errors.toString());
+		
 		return new ResponseEntity<HashMap>(result,HttpStatus.valueOf(errorCode.getERROR_CODE()));
 	}
 	

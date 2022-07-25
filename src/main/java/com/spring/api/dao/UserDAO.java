@@ -100,4 +100,8 @@ public class UserDAO {
 	public int updateCheckoutInfo(HashMap param) {
 		return sqlSession.update("users.updateCheckoutInfo", param);
 	}
+
+	public List<HashMap> readQuestions() {
+		return sqlSession.selectList("users.readQuestions");
+	}
 }
