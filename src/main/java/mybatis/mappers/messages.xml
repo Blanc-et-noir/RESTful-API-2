@@ -6,7 +6,7 @@
 		FROM messages
 		WHERE
 		<choose>
-			<when test="message_type == 'receive'">
+			<when test='message_type.equalsIgnoreCase("R")'>
 				message_receiver_id = #{user_id} AND message_receiver_remove_flag = 'N'
 			</when>
 			<otherwise>
@@ -17,15 +17,36 @@
 			<![CDATA[AND DATE_FORMAT(message_date,'%Y-%m-%d %T') >= DATE_FORMAT(#{search_begin_date},'%Y-%m-%d %T')]]>
 		</if>
 		<if test="search_end_date != null">
-			<![CDATA[AND DATE_FORMAT(message_date,'%Y-%m-%d %T') >= DATE_FORMAT(#{search_end_date},'%Y-%m-%d %T')]]>
+			<![CDATA[AND DATE_FORMAT(message_date,'%Y-%m-%d %T') <= DATE_FORMAT(#{search_end_date},'%Y-%m-%d %T')]]>
 		</if>
-		ORDER BY message_date DESC
-		LIMIT 10 OFFSET ${offset}
+		AND ${flag} LIKE CONCAT('%', #{search}, '%')
+		ORDER BY message_date ${sort}
+		LIMIT ${size} OFFSET ${offset}
 	</select>
 	<select id="readMessageByMessageId" parameterType="java.util.HashMap" resultType="java.util.HashMap">
 		SELECT *
 		FROM messages
 		WHERE message_id = #{message_id} AND ((message_receiver_id = #{user_id} AND message_receiver_remove_flag = 'N') OR (message_sender_id = #{user_id} AND message_sender_remove_flag = 'N'))
+	</select>
+	<select id="getMessageTotal" parameterType="java.util.HashMap" resultType="Integer">
+		SELECT count(*)
+		FROM messages
+		WHERE
+		<choose>
+			<when test='message_type.equalsIgnoreCase("R")'>
+				message_receiver_id = #{user_id} AND message_receiver_remove_flag = 'N'
+			</when>
+			<otherwise>
+				message_sender_id = #{user_id} AND message_sender_remove_flag = 'N'
+			</otherwise>
+		</choose>
+		<if test="search_begin_date != null">
+			<![CDATA[AND DATE_FORMAT(message_date,'%Y-%m-%d %T') >= DATE_FORMAT(#{search_begin_date},'%Y-%m-%d %T')]]>
+		</if>
+		<if test="search_end_date != null">
+			<![CDATA[AND DATE_FORMAT(message_date,'%Y-%m-%d %T') <= DATE_FORMAT(#{search_end_date},'%Y-%m-%d %T')]]>
+		</if>
+		AND ${flag} LIKE CONCAT('%', #{search}, '%')
 	</select>
 	
 	<update id="deleteMessage" parameterType="java.util.HashMap">

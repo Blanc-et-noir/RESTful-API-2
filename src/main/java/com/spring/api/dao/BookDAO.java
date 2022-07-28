@@ -59,4 +59,12 @@ public class BookDAO {
 	public int deleteBookTypes(HashMap param) {
 		return sqlSession.delete("books.deleteBookTypes",param);
 	}
+
+	public int getBookTotal(HashMap param) {
+		return (Integer) sqlSession.selectOne("books.getBookTotal", param);
+	}
+	
+	public List<HashMap> readBooks(HashMap param) {
+		return sqlSession.selectList("books.readBooks", param);
+	}
 }

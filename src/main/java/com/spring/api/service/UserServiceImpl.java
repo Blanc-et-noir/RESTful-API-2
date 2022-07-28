@@ -611,7 +611,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public List<HashMap> readCheckoutInfo(HttpServletRequest request, HashMap param) {
+	public HashMap readCheckoutInfo(HttpServletRequest request, HashMap param) {
 		//1. 해당 회원정보가 DB에 실제로 존재하는지 확인함.
 		HashMap user = userDAO.readUserInfo(param);								
 		if(user==null) {
@@ -629,13 +629,13 @@ public class UserServiceImpl implements UserService {
 		}
 		
 		//3. 검색 날짜 형식이 적절한지 판단함.
-		String checkout_begin_date = (String)param.get("checkout_begin_date");
-		if(checkout_begin_date!=null&&!RegexUtil.checkRegex(checkout_begin_date, RegexUtil.DATE_REGEX)) {
+		String search_begin_date = (String)param.get("search_begin_date");
+		if(search_begin_date!=null&&!RegexUtil.checkRegex(search_begin_date, RegexUtil.DATE_REGEX)) {
 			throw new CustomException(ErrorCode.DATE_NOT_MATCHED_TO_REGEX);
 		}
 		
-		String checkout_end_date = (String)param.get("checkout_end_date");
-		if(checkout_end_date!=null&&!RegexUtil.checkRegex(checkout_end_date, RegexUtil.DATE_REGEX)) {
+		String search_end_date = (String)param.get("search_end_date");
+		if(search_end_date!=null&&!RegexUtil.checkRegex(search_end_date, RegexUtil.DATE_REGEX)) {
 			throw new CustomException(ErrorCode.DATE_NOT_MATCHED_TO_REGEX);
 		}
 		
@@ -648,6 +648,76 @@ public class UserServiceImpl implements UserService {
 		String isOverdue = (String)param.get("isOverdue");
 		if(isOverdue!=null&&!(isOverdue.equalsIgnoreCase("Y")||isOverdue.equalsIgnoreCase("N"))) {
 			throw new CustomException(ErrorCode.SEARCH_FLAG_NOT_MATCHED_TO_REGEX);
+		}
+		
+		//3. 검색기준 필드가 도서 제목, 도서 ISBN 코드, 출판사 이름, 저자 이름, 번역자 이름중 하나에 속하는지 판단함. 기본적으로는 도서 제목이 검색 기준임
+		String flag = "book_name";
+		if(param.get("flag")!=null) {
+			flag = (String) param.get("flag");
+		}
+		
+		if(!(flag.equalsIgnoreCase("checkout_id")||flag.equalsIgnoreCase("book_isbn")||flag.equalsIgnoreCase("book_translators")||flag.equalsIgnoreCase("book_authors")||flag.equalsIgnoreCase("book_type_content")||flag.equalsIgnoreCase("book_publisher")||flag.equalsIgnoreCase("book_name"))) {
+			flag = "book_name";
+		}
+		param.put("flag", flag);
+		
+		//4. 검색기준에 대하여 검색값이 정규식에 부합하는지 확인함
+		String search = "";
+		if(param.get("search")!=null) {
+			search = (String) param.get("search");
+		}
+		param.put("search", search);
+		
+		//4. 정렬방식이 오름차순, 내림차순인지 확인함. 기본적으로 오름차순정렬
+		String sort = "ASC";
+		if(param.get("sort")!=null) {
+			if(((String)param.get("sort")).equalsIgnoreCase("A")) {
+				sort = "ASC";
+			}else if(((String)param.get("sort")).equalsIgnoreCase("D")) {
+				sort = "DESC";
+			}else {
+				throw new CustomException(ErrorCode.SORT_OUT_OF_RANGE);
+			}
+		}
+		param.put("sort", sort);
+		
+		//4. size는 마음대로 10 ~ 100사이로, 기본 10
+		int size = 10;
+		
+		if(param.get("size")!=null) {
+			try {
+				size = Integer.parseInt((String)param.get("size"));
+				if(size<10||size>100) {
+					throw new CustomException(ErrorCode.SIZE_OUT_OF_RANGE);
+				}
+			}catch(NumberFormatException e) {
+				throw new CustomException(ErrorCode.SIZE_NOT_COUNTABLE);
+			}
+		}
+		param.put("size", size);
+		
+		//2. page는 1이 기본
+		int page = 1;
+		
+		if(param.get("page")!=null) {
+			try {
+				page = Integer.parseInt((String)param.get("page"));
+			}catch(NumberFormatException e) {
+				throw new CustomException(ErrorCode.PAGE_NOT_COUNTABLE);
+			}
+		}
+		
+		//4. 페이징 최대 크기를 구함
+		int max_page = (int) Math.ceil(userDAO.getCheckoutTotal(param)*1.0/size);
+		if(max_page==0) {
+			max_page=1;
+		}
+		
+		//5. 페이지 번호가 적절한 범위 내에 있는지 확인함
+		if(page<=0||page>max_page) {
+			throw new CustomException(ErrorCode.PAGE_OUT_OF_RANGE);
+		}else {
+			param.put("offset", (page-1)*size);
 		}
 		
 		//5. 대출 정보를 조회함.
@@ -694,8 +764,10 @@ public class UserServiceImpl implements UserService {
 			
 			list.add(checkout);
 		}
-		
-		return list;
+		HashMap result = new HashMap();
+		result.put("checkouts", list);
+		result.put("max_page", max_page);
+		return result;
 	}
 
 	@Override
@@ -716,22 +788,11 @@ public class UserServiceImpl implements UserService {
 			throw new CustomException(ErrorCode.NOT_AUTHORIZED);
 		}
 		
-		//3. 검색 날짜 형식이 적절한지 판단함.
-		String reservation_begin_date = (String)param.get("reservation_begin_date");
-		if(reservation_begin_date!=null&&!RegexUtil.checkRegex(reservation_begin_date, RegexUtil.DATE_REGEX)) {
-			throw new CustomException(ErrorCode.DATE_NOT_MATCHED_TO_REGEX);
-		}
-		
-		String reservation_end_date = (String)param.get("reservation_end_date");
-		if(reservation_end_date!=null&&!RegexUtil.checkRegex(reservation_end_date, RegexUtil.DATE_REGEX)) {
-			throw new CustomException(ErrorCode.DATE_NOT_MATCHED_TO_REGEX);
-		}
-		
-		//4. 예약 정보를 조회함.
+		//3. 예약 정보를 조회함.
 		List<HashMap> reservations = userDAO.readReservationInfosWithOptions(param);
 		List<HashMap> list = new LinkedList<HashMap>();
 		
-		//5. 조회한 예약 정보를 가공함.
+		//4. 조회한 예약 정보를 가공함.
 		for(HashMap temp : reservations) {
 			HashMap book = new HashMap();
 			book.put("book_isbn", temp.get("book_isbn"));

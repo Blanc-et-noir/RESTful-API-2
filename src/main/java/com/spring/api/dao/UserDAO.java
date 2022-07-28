@@ -85,8 +85,7 @@ public class UserDAO {
 	}
 
 	public HashMap readReservationInfoByReservationId(HashMap param) {
-		// TODO Auto-generated method stub
-		return null;
+		return sqlSession.selectOne("users.readReservationInfoByReservationId",param);
 	}
 
 	public List<HashMap> readCheckOutInfosWithOptions(HashMap param) {
@@ -103,5 +102,9 @@ public class UserDAO {
 
 	public List<HashMap> readQuestions() {
 		return sqlSession.selectList("users.readQuestions");
+	}
+	
+	public int getCheckoutTotal(HashMap param) {
+		return sqlSession.selectOne("users.getCheckoutTotal", param);
 	}
 }

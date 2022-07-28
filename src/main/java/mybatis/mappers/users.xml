@@ -43,23 +43,28 @@
 		WHERE user_id = #{user_id}
 		ORDER BY reservation_date ASC
 	</select>
+	<select id="readReservationInfoByReservationId" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT reservation_id, user_id, book_isbn, DATE_FORMAT(reservation_date,'%Y-%m-%d %T')
+		FROM reservations
+		WHERE reservation_id = #{reservation_id} AND user_id = #{user_id}
+	</select>
 	<select id="readCheckOutInfosWithOptions" parameterType="java.util.HashMap" resultType="java.util.HashMap">
 		SELECT checkout_id, user_id, book_isbn, book_name,book_type_id,book_type_content,book_authors, book_translators,book_publisher, DATE_FORMAT(checkout_begin_date,"%Y-%m-%d %T") AS "checkout_begin_date", DATE_FORMAT(checkout_end_date,"%Y-%m-%d %T") AS "checkout_end_date", DATE_FORMAT(checkout_return_date,"%Y-%m-%d %T") AS "checkout_return_date", checkout_renew_count
 		FROM checkouts NATURAL JOIN books NATURAL JOIN book_types
 		WHERE user_id = #{user_id}
 		<choose>
-			<when test='isReturned!=null and isReturned.equals("Y")'>
+			<when test='isReturned!=null and isReturned.equalsIgnoreCase("Y")'>
 				AND checkout_return_date IS NOT NULL
 			</when>
-			<when test='isReturned!=null and isReturned.equals("N")'>
+			<when test='isReturned!=null and isReturned.equalsIgnoreCase("N")'>
 				AND checkout_return_date IS NULL
 			</when>
 		</choose>
 		<choose>
-			<when test='isOverdue!=null and isOverdue.equals("Y")'>
+			<when test='isOverdue!=null and isOverdue.equalsIgnoreCase("Y")'>
 				<![CDATA[AND checkout_end_date < NOW()]]>
 			</when>
-			<when test='isOverdue!=null and isOverdue.equals("N")'>
+			<when test='isOverdue!=null and isOverdue.equalsIgnoreCase("N")'>
 				<![CDATA[AND checkout_end_date >= NOW()]]>
 			</when>
 		</choose>
@@ -69,18 +74,82 @@
 		<if test="checkout_end_date != null">
 			<![CDATA[AND DATE_FORMAT(checkout_begin_date,'%Y-%m-%d %T') < DATE_FORMAT(#{checkout_end_date},'%Y-%m-%d %T')]]>
 		</if>
-		ORDER BY DATE_FORMAT(checkout_begin_date,"%Y-%m-%d %T") DESC
+		<choose>
+			<when test='flag.equalsIgnoreCase("book_publisher")'>
+				AND book_publisher LIKE CONCAT('%', #{search}, '%')
+			</when>
+			<when test='flag.equalsIgnoreCase("book_type_content")'>
+				AND book_type_content LIKE CONCAT('%', #{search}, '%')
+			</when>
+			<when test='flag.equalsIgnoreCase("book_authors")'>
+				AND book_authors LIKE CONCAT('%', #{search}, '%')
+			</when>
+			<when test='flag.equalsIgnoreCase("book_translators")'>
+				AND book_translators LIKE CONCAT('%', #{search}, '%')
+			</when>
+			<when test='flag.equalsIgnoreCase("book_isbn")'>
+				AND book_isbn LIKE CONCAT('%', #{search}, '%')
+			</when>
+			<when test='flag.equalsIgnoreCase("checkout_id")'>
+				AND checkout_id LIKE CONCAT('%', #{search}, '%')
+			</when>
+			<otherwise>
+				AND book_name LIKE CONCAT('%', #{search}, '%')
+			</otherwise>
+		</choose>
+		ORDER BY DATE_FORMAT(checkout_begin_date,"%Y-%m-%d %T") ${sort}
+	</select>
+	<select id="getCheckoutTotal" parameterType="java.util.HashMap" resultType="Integer">
+		SELECT COUNT(*)
+		FROM checkouts NATURAL JOIN books NATURAL JOIN book_types
+		WHERE user_id = #{user_id}
+		<choose>
+			<when test='isReturned!=null and isReturned.equalsIgnoreCase("Y")'>
+				AND checkout_return_date IS NOT NULL
+			</when>
+			<when test='isReturned!=null and isReturned.equalsIgnoreCase("N")'>
+				AND checkout_return_date IS NULL
+			</when>
+		</choose>
+		<choose>
+			<when test='isOverdue!=null and isOverdue.equalsIgnoreCase("Y")'>
+				<![CDATA[AND checkout_end_date < NOW()]]>
+			</when>
+			<when test='isOverdue!=null and isOverdue.equalsIgnoreCase("N")'>
+				<![CDATA[AND checkout_end_date >= NOW()]]>
+			</when>
+		</choose>
+		<if test="checkout_begin_date != null">
+			<![CDATA[AND DATE_FORMAT(checkout_begin_date,'%Y-%m-%d %T') > DATE_FORMAT(#{checkout_begin_date},'%Y-%m-%d %T')]]>
+		</if>
+		<if test="checkout_end_date != null">
+			<![CDATA[AND DATE_FORMAT(checkout_begin_date,'%Y-%m-%d %T') < DATE_FORMAT(#{checkout_end_date},'%Y-%m-%d %T')]]>
+		</if>
+		<choose>
+			<when test='flag.equalsIgnoreCase("book_publisher")'>
+				AND book_publisher LIKE CONCAT('%', #{search}, '%')
+			</when>
+			<when test='flag.equalsIgnoreCase("book_type_content")'>
+				AND book_type_content LIKE CONCAT('%', #{search}, '%')
+			</when>
+			<when test='flag.equalsIgnoreCase("book_authors")'>
+				AND book_authors LIKE CONCAT('%', #{search}, '%')
+			</when>
+			<when test='flag.equalsIgnoreCase("book_translators")'>
+				AND book_translators LIKE CONCAT('%', #{search}, '%')
+			</when>
+			<when test='flag.equalsIgnoreCase("book_isbn")'>
+				AND book_isbn LIKE CONCAT('%', #{search}, '%')
+			</when>
+			<otherwise>
+				AND book_name LIKE CONCAT('%', #{search}, '%')
+			</otherwise>
+		</choose>
 	</select>
 	<select id="readReservationInfosWithOptions" parameterType="java.util.HashMap" resultType="java.util.HashMap">
 		SELECT reservation_id, user_id, book_isbn, book_name,book_type_id,book_type_content,book_authors, book_translators,book_publisher, DATE_FORMAT(reservation_date,"%Y-%m-%d %T") AS "reservation_date"
 		FROM reservations NATURAL JOIN books NATURAL JOIN book_types
 		WHERE user_id = #{user_id}
-		<if test="reservation_begin_date != null">
-			<![CDATA[AND DATE_FORMAT(reservation_date,'%Y-%m-%d %T') > DATE_FORMAT(#{reservation_begin_date},'%Y-%m-%d %T')]]>
-		</if>
-		<if test="reservation_end_date != null">
-			<![CDATA[AND DATE_FORMAT(reservation_date,'%Y-%m-%d %T') < DATE_FORMAT(#{reservation_end_date},'%Y-%m-%d %T')]]>
-		</if>
 		ORDER BY DATE_FORMAT(reservation_date,"%Y-%m-%d %T") DESC
 	</select>
 	<select id="readQuestions" resultType="java.util.HashMap">
@@ -142,6 +211,6 @@
 	
 	<delete id="deleteReservation" parameterType="java.util.HashMap">
 		DELETE FROM reservations
-		WHERE user_id = #{user_id} AND book_isbn = #{book_isbn}
+		WHERE reservation_id = #{reservation_id} AND user_id = #{user_id}
 	</delete>
 </mapper>
