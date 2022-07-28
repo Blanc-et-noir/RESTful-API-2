@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartRequest;
 
@@ -28,6 +29,14 @@ public class BookController {
 		result.put("flag", true);
 		result.put("content", "신규 도서 등록에 성공했습니다.");
 		return new ResponseEntity<HashMap>(result,HttpStatus.CREATED);
+	}
+	
+	@RequestMapping(value= {"/books"}, method= {RequestMethod.GET})
+	public ResponseEntity<HashMap> readBooks(@RequestParam HashMap<String,String> param){
+		HashMap result = bookService.readBooks(param);
+		result.put("flag", true);
+		result.put("content", "도서 조회에 성공했습니다.");
+		return new ResponseEntity<HashMap>(result,HttpStatus.OK);
 	}
 	
 	@RequestMapping(value= {"/books/book_types"}, method= {RequestMethod.GET})

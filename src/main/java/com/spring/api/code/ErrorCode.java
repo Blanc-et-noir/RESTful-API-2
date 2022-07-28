@@ -31,6 +31,18 @@ public enum ErrorCode {
 	DUPLICATE_BOOK_ISBN(400,"해당 ISBN의 정보를 갖는 도서가 이미 존재합니다."),
 	DUPLICATE_BOOK_ISBN_OF_RESERVATION(400,"해당 도서를 이미 예약했습니다."),
 	
+	//페이지의 범위를 벗어남
+	PAGE_OUT_OF_RANGE(400,"페이지가 범위를 벗어났습니다."),
+	//페이지가 정수가 아님
+	PAGE_NOT_COUNTABLE(400,"페이지는 1이상의 정수여야 합니다."),
+	//사이즈의 범위를 벗어남
+	SIZE_OUT_OF_RANGE(400,"사이즈가 범위를 벗어났습니다."),
+	//사이즈가 정수가 아님
+	SIZE_NOT_COUNTABLE(400,"사이즈는 1이상의 정수여야 합니다."),
+	//정렬은 ASC 또는 DESC여야함
+	SORT_OUT_OF_RANGE(400,"정렬은 A 또는 D만 가능 합니다."),
+	
+	
 	//없는 값
 	NOT_FOUND_BOOK_TYPE(400,"해당 도서 장르가 존재하지 않습니다."),
 	NOT_FOUND_BOOK(400,"해당 ISBN 코드로 등록된 도서 정보가 존재하지 않습니다."),

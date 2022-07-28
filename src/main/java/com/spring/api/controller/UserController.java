@@ -22,7 +22,7 @@ public class UserController {
 	@Autowired
 	private UserService userService;
 	
-	//1. 공개키 발급
+	//1. 공개키 발급, 현재 사용하지 않음
 	/*
 	@RequestMapping(value="/users/publickeys",method=RequestMethod.GET)
 	public ResponseEntity<HashMap> createNewUserKeys() throws CustomException, Exception {
@@ -126,10 +126,9 @@ public class UserController {
 	//9. 대출현황 조회
 	@RequestMapping(value="/users/{user_id}/checkouts",method={RequestMethod.GET})
 	public ResponseEntity<HashMap> readCheckoutInfo(HttpServletRequest request, @RequestParam HashMap param, @PathVariable("user_id") String user_id){
-		HashMap result = new HashMap();
 		param.put("user_id", user_id);
-		List<HashMap> list = userService.readCheckoutInfo(request, param);
-		result.put("checkouts", list);
+		
+		HashMap result = userService.readCheckoutInfo(request, param);
 		result.put("flag", true);
 		result.put("content", "도서 대출 조회에 성공했습니다.");
 		return new ResponseEntity<HashMap>(result,HttpStatus.OK);

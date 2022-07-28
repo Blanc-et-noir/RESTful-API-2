@@ -9,7 +9,7 @@ public interface MessageService {
 
 	void createNewMessage(HttpServletRequest request,HashMap<String, String> param);
 
-	List<HashMap> readMessages(HttpServletRequest request, HashMap<String, String> param);
+	HashMap readMessages(HttpServletRequest request, HashMap<String, String> param);
 
 	void deleteMessages(HttpServletRequest request, HashMap<String, String> param);
 

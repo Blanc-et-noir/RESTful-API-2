@@ -21,4 +21,6 @@ public interface BookService {
 
 	void deleteBookTypes(HttpServletRequest request, HashMap param);
 
+	HashMap readBooks(HashMap<String,String> param);
+
 }

@@ -39,9 +39,8 @@ public class MessageController {
 	//2. 메세지 조회
 	@RequestMapping(value = "/users/{user_id}/messages",method = RequestMethod.GET)
 	public ResponseEntity<HashMap> readMessages(HttpServletRequest request, @RequestParam HashMap<String,String> param, @PathVariable("user_id") String user_id){
-		HashMap result = new HashMap();
 		param.put("user_id", user_id);
-		result.put("messages", messageService.readMessages(request, param));
+		HashMap result = messageService.readMessages(request, param);
 		result.put("flag", true);
 		result.put("content", "메세지 조회에 성공했습니다.");
 		return new ResponseEntity<HashMap>(result,HttpStatus.OK);

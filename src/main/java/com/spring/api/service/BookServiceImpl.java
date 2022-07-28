@@ -312,4 +312,119 @@ public class BookServiceImpl implements BookService{
 			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
 		}
 	}
+
+	@Override
+	public HashMap readBooks(HashMap param) {
+		//1. size는 마음대로 10 ~ 100사이로, 기본 10
+		int size = 10;
+		
+		if(param.get("size")!=null) {
+			try {
+				size = Integer.parseInt((String)param.get("size"));
+				if(size<10||size>100) {
+					throw new CustomException(ErrorCode.SIZE_OUT_OF_RANGE);
+				}
+			}catch(NumberFormatException e) {
+				throw new CustomException(ErrorCode.SIZE_NOT_COUNTABLE);
+			}
+		}
+		param.put("size", size);
+		
+		//2. page는 1이 기본
+		int page = 1;
+		
+		if(param.get("page")!=null) {
+			try {
+				page = Integer.parseInt((String)param.get("page"));
+			}catch(NumberFormatException e) {
+				throw new CustomException(ErrorCode.PAGE_NOT_COUNTABLE);
+			}
+		}
+		
+		//3. 검색기준 필드가 도서 제목, 도서 ISBN 코드, 출판사 이름, 저자 이름, 번역자 이름중 하나에 속하는지 판단함. 기본적으로는 도서 제목이 검색 기준임
+		String flag = "book_name";
+		if(param.get("flag")!=null) {
+			flag = (String) param.get("flag");
+		}
+		
+		if(!(flag.equalsIgnoreCase("book_name")||flag.equalsIgnoreCase("book_isbn")||flag.equalsIgnoreCase("book_publisher"))) {
+			flag = "book_name";
+		}
+		param.put("flag", flag);
+		
+		//4. 검색기준에 대하여 검색값이 정규식에 부합하는지 확인함
+		String search = "";
+		if(param.get("search")!=null) {
+			search = (String) param.get("search");
+		}
+		
+		if(flag.equalsIgnoreCase("book_name")) {
+			if(!RegexUtil.checkBytes(search,RegexUtil.BOOK_NAME_MAXBYTES)) {
+				throw new CustomException(ErrorCode.BOOK_NAME_EXCEEDED_LIMIT_ON_MAXBYTES);
+			}
+		}else if(flag.equalsIgnoreCase("book_isbn")) {
+			if(!RegexUtil.checkRegex(search,RegexUtil.BOOK_ISBN_REGEX)) {
+				throw new CustomException(ErrorCode.BOOK_ISBN_NOT_MATCHED_TO_REGEX);
+			}			
+		}else if(flag.equalsIgnoreCase("book_publisher")) {
+			if(!RegexUtil.checkRegex(search,RegexUtil.BOOK_PUBLISHER_NAME_REGEX)) {
+				throw new CustomException(ErrorCode.PUBLISHER_NAME_NOT_MATCHED_TO_REGEX);
+			}
+		}
+		param.put("search", search);
+		
+		//4. 정렬방식이 오름차순, 내림차순인지 확인함. 기본적으로 오름차순정렬
+		String sort = "ASC";
+		if(param.get("sort")!=null) {
+			if(sort.equalsIgnoreCase("ASC")||sort.equalsIgnoreCase("DESC")) {
+				sort = (String) param.get("sort");
+			}else {
+				throw new CustomException(ErrorCode.SORT_OUT_OF_RANGE);
+			}
+		}
+		param.put("sort", sort);
+		
+		//5. 페이징 최대 크기를 구함
+		int max_page = (int) Math.ceil(bookDAO.getBookTotal(param)*1.0/size);
+		if(max_page==0) {
+			max_page=1;
+		}
+		
+		//6. 페이지 번호가 적절한 범위 내에 있는지 확인함
+		if(page<=0||page>max_page) {
+			throw new CustomException(ErrorCode.PAGE_OUT_OF_RANGE);
+		}else {
+			param.put("offset", (page-1)*size);
+		}
+		param.put("page", page);
+		
+		//7. 도서 목록을 조회함
+		List<HashMap> books = bookDAO.readBooks(param);
+		Iterator<HashMap> itor = books.iterator();
+		
+		while(itor.hasNext()) {
+			HashMap book = itor.next();
+			
+			String[] author_names = ((String)book.get("book_authors")).split(" ");
+			List book_authors = new LinkedList();
+			for(String author : author_names) {
+				book_authors.add(author);
+			}
+
+			String[] translator_names = ((String)book.get("book_translators")).split(" ");
+			List book_translators = new LinkedList();
+			for(String translator : translator_names) {
+				book_translators.add(translator);
+			}
+			
+			book.remove("book_authors");
+			book.remove("book_translators");
+			book.put("book_authors", book_authors);
+			book.put("book_translators", book_translators);
+		}
+		HashMap result = new HashMap();
+		result.put("books", books);
+		result.put("max_page", max_page);
+		return result;
+	}
 }

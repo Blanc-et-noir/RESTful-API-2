@@ -90,7 +90,7 @@ public class MessageServiceImpl implements MessageService{
 	}
 
 	@Override
-	public List<HashMap> readMessages(HttpServletRequest request, HashMap param) {
+	public HashMap readMessages(HttpServletRequest request, HashMap param) {
 		//1. 해당 회원정보가 DB에 실제로 존재하는지 확인함.
 		HashMap user = userDAO.readUserInfo(param);								
 		if(user==null) {
@@ -108,25 +108,41 @@ public class MessageServiceImpl implements MessageService{
 		
 		//3. 조회하려는 메세지가 송, 수신 메세지중 어떤 메세지인지 판단함.
 		String message_type = (String) param.get("message_type");
-		if(message_type==null||!(message_type.equals("receive")||message_type.equals("send"))) {
-			message_type = "receive";
+		if(message_type==null||!(message_type.equalsIgnoreCase("R")||message_type.equalsIgnoreCase("S"))) {
+			message_type = "R";
 		}
 		
-		//4. 메세지 페이징이 유효하지 않으면 0으로 설정함.
-		Integer offset = null;
-		
-		try {
-			offset = Integer.valueOf((String) param.get("offset"));
-		}catch(Exception e) {
-			offset = 0;
+		//3. 검색기준 필드가 메세지 ID, 메세지 제목, 메세지 내용, 메세지 송신자 ID, 메세지 수신자 ID중 하나에 해당하는지 판단함. 기본적으로는 도서 제목이 검색 기준임
+		String flag = "message_title";
+		if(param.get("flag")!=null) {
+			flag = (String) param.get("flag");
 		}
 		
-		if(offset<0) {
-			throw new CustomException(ErrorCode.TOO_LOW_MESSAGE_OFFSET);
-		}else {
-			offset = offset * 10;
-			param.put("offset", offset);
+		if(!(flag.equalsIgnoreCase("message_id")||flag.equalsIgnoreCase("message_title")||flag.equalsIgnoreCase("message_content")||flag.equalsIgnoreCase("message_sender_id")||flag.equalsIgnoreCase("message_receiver_id"))) {
+			flag = "message_title";
 		}
+		param.put("flag", flag);
+		
+		//4. 검색기준에 대하여 검색값이 정규식에 부합하는지 확인함
+		String search = "";
+		if(param.get("search")!=null) {
+			search = (String) param.get("search");
+		}
+		param.put("search", search);
+		
+		
+		//4. 정렬방식이 오름차순, 내림차순인지 확인함. 기본적으로 오름차순정렬
+		String sort = "ASC";
+		if(param.get("sort")!=null) {
+			if(((String)param.get("sort")).equalsIgnoreCase("A")) {
+				sort = "ASC";
+			}else if(((String)param.get("sort")).equalsIgnoreCase("D")) {
+				sort = "DESC";
+			}else {
+				throw new CustomException(ErrorCode.SORT_OUT_OF_RANGE);
+			}
+		}
+		param.put("sort", sort);
 		
 		//5. 메세지 탐색 시작 날짜의 유효성을 판단함.
 		String search_begin_date = (String) param.get("search_begin_date");
@@ -140,10 +156,54 @@ public class MessageServiceImpl implements MessageService{
 			throw new CustomException(ErrorCode.DATE_NOT_MATCHED_TO_REGEX);
 		}
 		
+		//4. size는 마음대로 10 ~ 100사이로, 기본 10
+		int size = 10;
+		
+		if(param.get("size")!=null) {
+			try {
+				size = Integer.parseInt((String)param.get("size"));
+				if(size<10||size>100) {
+					throw new CustomException(ErrorCode.SIZE_OUT_OF_RANGE);
+				}
+			}catch(NumberFormatException e) {
+				throw new CustomException(ErrorCode.SIZE_NOT_COUNTABLE);
+			}
+		}
+		param.put("size", size);
+		
+		//2. page는 1이 기본
+		int page = 1;
+		
+		if(param.get("page")!=null) {
+			try {
+				page = Integer.parseInt((String)param.get("page"));
+			}catch(NumberFormatException e) {
+				throw new CustomException(ErrorCode.PAGE_NOT_COUNTABLE);
+			}
+		}
+		
+		//4. 페이징 최대 크기를 구함
+		int max_page = (int) Math.ceil(messageDAO.getMessageTotal(param)*1.0/size);
+		System.out.println(messageDAO.getMessageTotal(param)+"");
+		if(max_page==0) {
+			max_page=1;
+		}
+		
+		//5. 페이지 번호가 적절한 범위 내에 있는지 확인함
+		if(page<=0||page>max_page) {
+			throw new CustomException(ErrorCode.PAGE_OUT_OF_RANGE);
+		}else {
+			param.put("offset", (page-1)*size);
+		}
+		
 		//7. 메세지를 조회함.
 		List<HashMap> list = messageDAO.readMessages(param);
 		
-		return list;
+		HashMap result = new HashMap();
+		result.put("messages", list);
+		result.put("max_page", max_page);
+		
+		return result;
 	}
 
 	@Override

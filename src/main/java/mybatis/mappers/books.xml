@@ -29,7 +29,53 @@
 		FROM books
 		WHERE book_isbn = #{book_isbn}
 	</select>
-	
+	<select id="readBooks" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT book_isbn, book_name, book_authors, book_translators, book_publisher, DATE_FORMAT(book_pub_date,'%Y-%m-%d %T') AS "book_pub_date", book_quantity, book_type_id, book_type_content
+		FROM books NATURAL JOIN book_types
+		<if test='flag.equalsIgnoreCase("book_name")'>
+			WHERE book_name LIKE CONCAT('%', #{search}, '%')
+		</if>
+		<if test='flag.equalsIgnoreCase("book_isbn")'>
+			WHERE book_isbn LIKE CONCAT('%', #{search}, '%')
+		</if>
+		<if test='flag.equalsIgnoreCase("book_publisher")'>
+			WHERE book_publisher LIKE CONCAT('%', #{search}, '%')
+		</if>
+		<if test='flag.equalsIgnoreCase("book_author")'>
+			WHERE book_authors LIKE CONCAT('%', #{search}, '%')
+		</if>
+		<if test='flag.equalsIgnoreCase("book_translator")'>
+			WHERE book_translators LIKE CONCAT('%', #{search}, '%')
+		</if>
+		<if test='flag.equalsIgnoreCase("book_type_content")'>
+			WHERE book_type_content LIKE CONCAT('%', #{search}, '%')
+		</if>
+		ORDER BY ${flag} ${sort}
+		LIMIT ${size} OFFSET ${offset}
+	</select>
+	<select id="getBookTotal" parameterType="java.util.HashMap" resultType="Integer">
+		SELECT COUNT(*)
+		FROM books NATURAL JOIN book_types
+		<if test='flag.equalsIgnoreCase("book_name")'>
+			WHERE book_name LIKE CONCAT('%', #{search}, '%')
+		</if>
+		<if test='flag.equalsIgnoreCase("book_isbn")'>
+			WHERE book_isbn LIKE CONCAT('%', #{search}, '%')
+		</if>
+		<if test='flag.equalsIgnoreCase("book_publisher")'>
+			WHERE book_publisher LIKE CONCAT('%', #{search}, '%')
+		</if>
+		<if test='flag.equalsIgnoreCase("book_author")'>
+			WHERE book_authors LIKE CONCAT('%', #{search}, '%')
+		</if>
+		<if test='flag.equalsIgnoreCase("book_translator")'>
+			WHERE book_translators LIKE CONCAT('%', #{search}, '%')
+		</if>
+		<if test='flag.equalsIgnoreCase("book_type_content")'>
+			WHERE book_type_content LIKE CONCAT('%', #{search}, '%')
+		</if>
+	</select>
+		
 	<insert id="createNewBookInfo" parameterType="java.util.HashMap">
 		INSERT INTO books
 		VALUES(#{book_isbn},#{book_name},#{book_authors},#{book_translators},#{book_publisher},DATE_FORMAT(#{book_date},'%Y-%m-%d %T'),${book_quantity},#{book_type_id})

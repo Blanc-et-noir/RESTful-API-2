@@ -27,4 +27,8 @@ public class MessageDAO {
 	public int deleteMessage(HashMap param) {
 		return sqlSession.delete("messages.deleteMessage",param);
 	}
+
+	public int getMessageTotal(HashMap param) {
+		return sqlSession.selectOne("messages.getMessageTotal", param);
+	}
 }
