@@ -17,6 +17,7 @@ public class RSA2048{
 	
 	private static final int KEY_SIZE = 2048;
 	
+	//문자열 공개키로 평문을 암호화하는 메소드
 	public static String encrypt(String plainData, String stringPublicKey) {
         String encryptedData = null;
         try {
@@ -39,6 +40,7 @@ public class RSA2048{
         return encryptedData;
     }
 
+	//문자열 비밀키로 암호문을 복호화하는 메소드
 	public static String decrypt(String encryptedData, String stringPrivateKey) {
 		String decryptedData = null;
 		try {
@@ -59,6 +61,7 @@ public class RSA2048{
 		return decryptedData;
 	}
 
+	//RSA2048 공개키 및 비밀키를 발급하는 메소드
 	public static HashMap<String,String> createKeys() {
 		KeyPairGenerator gen;
 		KeyPair keypair = null;

@@ -24,8 +24,14 @@ import io.jsonwebtoken.SignatureAlgorithm;
 public class JwtUtil {
 	@Value("${jwt.privatekey}")
 	private String privatekey = null;
+	//리프레쉬 토큰의 최대 유효기간은 14일
 	public final long REFRESHTOKEN_MAXAGE = 14*24*60*60*1000;
-	public final long ACCESSTOKEN_MAXAGE = 2*60*60*1000;
+	
+	//액세스 토큰의 최대 유효기간은 2시간
+	//public final long ACCESSTOKEN_MAXAGE = 2*60*60*1000;
+	
+	//테스트를위해 20초로설정
+	public final long ACCESSTOKEN_MAXAGE = 20*1000;
 	
 	public String getAccesstoken(MultipartRequest request) {
 		return ((HttpServletRequest) request).getHeader("user_accesstoken");

@@ -63,22 +63,14 @@ public class UserServiceImpl implements UserService {
 		String user_id = param.get("user_id");
 		String user_pw = param.get("user_pw");
 		String user_name = param.get("user_name");
-		//String user_publickey = param.get("user_publickey");
-		//String user_privatekey = null;
 		String user_phone = param.get("user_phone");
 		String question_id = param.get("question_id");
 		String question_answer = param.get("question_answer");
-		
-		//1. 공개키가 유효하지 않으면 공개키 유효성 불충족 예외가 발생함.
-		//   비밀키가 Redis에 저장될 수 있는 시간이 지났거나, 공개키 자체가 유효하지 않을때 발생함.
-		//if((user_privatekey = (String) redisUtil.getData(user_publickey))==null) {
-			//throw new CustomException(ErrorCode.INVALID_PUBLICKEY);
-		//}
 
-		//2. ID가 전달되지 않았거나, 정규식을 만족하지 않으면 예외가 발생함.
+		//1. ID가 전달되지 않았거나, 정규식을 만족하지 않으면 예외가 발생함.
 		if(!RegexUtil.checkRegex(user_id,RegexUtil.USER_ID_REGEX)) {
 			throw new CustomException(ErrorCode.USER_ID_NOT_MATCHED_TO_REGEX);
-		//3. 해당 ID로 이미 가입한 사용자 정보가 있다면 예외가 발생함. 
+		//2. 해당 ID로 이미 가입한 사용자 정보가 있다면 예외가 발생함. 
 		}else {
 			param = new HashMap();
 			param.put("user_id", user_id);
@@ -90,21 +82,20 @@ public class UserServiceImpl implements UserService {
 			}
 		}
 		
-		//4. 비밀번호가 정규식에 부합하지않으면 예외가 발생함.
-		//user_pw = RSA2048.decrypt(user_pw, user_privatekey);
+		//3. 비밀번호가 정규식에 부합하지않으면 예외가 발생함.
 		if(!RegexUtil.checkRegex(user_pw,RegexUtil.USER_PW_REGEX)) {
 			throw new CustomException(ErrorCode.USER_PW_NOT_MATCHED_TO_REGEX);
 		}
 		
-		//5. 사용자 이름이 정규식에 부합하지 않으면 예외가 발생함.
+		//4. 사용자 이름이 정규식에 부합하지 않으면 예외가 발생함.
 		if(!RegexUtil.checkRegex(user_name,RegexUtil.USER_NAME_REGEX)){
 			throw new CustomException(ErrorCode.USER_NAME_NOT_MATCHED_TO_REGEX);
 		}
 		
-		//6. 사용자 전화번호가 정규식에 부합하지 않으면 예외가 발생함.
+		//5. 사용자 전화번호가 정규식에 부합하지 않으면 예외가 발생함.
 		if(!RegexUtil.checkRegex(user_phone,RegexUtil.USER_PHONE_REGEX)) {
 			throw new CustomException(ErrorCode.USER_PHONE_NOT_MATCHED_TO_REGEX);
-		//7. 사용자 전화번호로 회원가입한 사용자 정보가 이미 존재한다면 예외가 발생함.
+		//6. 사용자 전화번호로 회원가입한 사용자 정보가 이미 존재한다면 예외가 발생함.
 		}else {
 			param = new HashMap();
 			param.put("user_phone", user_phone);
@@ -116,18 +107,18 @@ public class UserServiceImpl implements UserService {
 			}
 		}
 		
-		//8. UUID가 정규식에 부합하지 않으면 예외가 발생함.
+		//7. UUID가 정규식에 부합하지 않으면 예외가 발생함.
 		if(!RegexUtil.checkRegex(question_id,RegexUtil.UUID_REGEX)) {
 			throw new CustomException(ErrorCode.UUID_NOT_MATCHED_TO_REGEX);
 		}
 		
-		//9. 비밀번호 찾기 질문에 대한 답이 특정 바이트이상의 크기를 갖는다면 예외가 발생함. 
+		//8. 비밀번호 찾기 질문에 대한 답이 특정 바이트이상의 크기를 갖는다면 예외가 발생함. 
 		question_answer = question_answer.replaceAll(" ", "");
 		if(!RegexUtil.checkBytes(question_answer,RegexUtil.QUESTION_ANSWER_MAXBYTES)) {
 			throw new CustomException(ErrorCode.QUESTION_ANSWER_EXCEEDED_LIMIT_ON_MAXBYTES);
 		}
 		
-		//10. 비밀번호, 비밀번호 찾기 질문의 답은 무작위 SALT값과 SHA512해시함수로 두 번 해싱하여 저장함.
+		//9. 비밀번호, 비밀번호 찾기 질문의 답은 무작위 SALT값과 SHA512해시함수로 두 번 해싱하여 저장함.
 		String user_salt = SHA.getSalt();
 		user_pw = SHA.DSHA512(user_pw, user_salt);
 		question_answer = SHA.DSHA512(question_answer, user_salt);
@@ -141,7 +132,7 @@ public class UserServiceImpl implements UserService {
 		param.put("question_answer", question_answer);
 		param.put("user_salt", user_salt);
 		
-		//11. 해당 회원정보로 회원가입을 실제로 진행함.
+		//10. 해당 회원정보로 회원가입을 실제로 진행함.
 		int row = userDAO.createNewUserInfo(param);
 		
 		if(row==0) {
@@ -210,17 +201,11 @@ public class UserServiceImpl implements UserService {
 		String user_salt = (String) user.get("user_salt");
 		String question_answer = (String) param.get("question_answer");
 		String user_publickey = (String) param.get("user_publickey");
-		//String user_privatekey = (String) redisUtil.getData(user_publickey);
-		
-		//if(user_privatekey==null) {
-			//throw new CustomException(ErrorCode.INVALID_PUBLICKEY);
-		//}
 		
 		if(question_answer==null) {
 			throw new CustomException(ErrorCode.QUESTION_ANSWER_REQUIRED);
 		}
 		
-		//복호화과정 삭제
 		question_answer = SHA.DSHA512(question_answer.replaceAll(" ", ""),user_salt);
 		
 		if(!question_answer.equals((String)user.get("question_answer"))){
@@ -243,7 +228,6 @@ public class UserServiceImpl implements UserService {
 		String new_user_pw = (String) param.get("new_user_pw");
 		
 		if(new_user_pw!=null) {
-			//new_user_pw = RSA2048.decrypt(new_user_pw, user_privatekey);
 			if(RegexUtil.checkRegex(new_user_pw, RegexUtil.USER_PW_REGEX)) {
 				new_user_pw = SHA.DSHA512(new_user_pw, new_user_salt);
 				param.put("new_user_salt", new_user_salt);
@@ -306,11 +290,13 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	//회원탈퇴 요청을 처리하는 메소드(미구현)
 	public void deleteUserInfo(HashMap<String,String> param) {
 		// TODO Auto-generated method stub
 	}
 
 	@Override
+	//대출 요청을 처리하는 메소드
 	public void createCheckoutInfo(HttpServletRequest request, HashMap param) {
 		//1. 해당 회원정보가 DB에 실제로 존재하는지 확인함.
 		HashMap user = userDAO.readUserInfo(param);
@@ -420,6 +406,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	//대출 반납처리를 요청하는 메소드
 	public void deleteCheckoutInfo(HttpServletRequest request, HashMap param) {
 		//1. 해당 회원정보가 DB에 실제로 존재하는지 확인함.
 		HashMap user = userDAO.readUserInfo(param);
@@ -512,6 +499,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	//도서 예약 요청을 처리하는 메소드
 	public void createNewReservationInfo(HttpServletRequest request, HashMap param) {
 		//1. 해당 회원정보가 DB에 실제로 존재하는지 확인함.
 		HashMap user = userDAO.readUserInfo(param);
@@ -581,6 +569,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	//도서 예약 취소 요청을 처리하는 메소드
 	public void deleteReservationInfo(HttpServletRequest request, HashMap param) {
 		//1. 해당 회원정보가 DB에 실제로 존재하는지 확인함.
 		HashMap user = userDAO.readUserInfo(param);
@@ -611,6 +600,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	//대출 정보 조회 요청을 처리하는 메소드
 	public HashMap readCheckoutInfo(HttpServletRequest request, HashMap param) {
 		//1. 해당 회원정보가 DB에 실제로 존재하는지 확인함.
 		HashMap user = userDAO.readUserInfo(param);								
@@ -650,7 +640,7 @@ public class UserServiceImpl implements UserService {
 			throw new CustomException(ErrorCode.SEARCH_FLAG_NOT_MATCHED_TO_REGEX);
 		}
 		
-		//3. 검색기준 필드가 도서 제목, 도서 ISBN 코드, 출판사 이름, 저자 이름, 번역자 이름중 하나에 속하는지 판단함. 기본적으로는 도서 제목이 검색 기준임
+		//5. 검색기준 필드가 도서 제목, 도서 ISBN 코드, 출판사 이름, 저자 이름, 번역자 이름중 하나에 속하는지 판단함. 기본적으로는 도서 제목이 검색 기준임
 		String flag = "book_name";
 		if(param.get("flag")!=null) {
 			flag = (String) param.get("flag");
@@ -661,14 +651,45 @@ public class UserServiceImpl implements UserService {
 		}
 		param.put("flag", flag);
 		
-		//4. 검색기준에 대하여 검색값이 정규식에 부합하는지 확인함
+		//6. 검색값이 존재하는지 확인함
 		String search = "";
 		if(param.get("search")!=null) {
 			search = (String) param.get("search");
 		}
 		param.put("search", search);
 		
-		//4. 정렬방식이 오름차순, 내림차순인지 확인함. 기본적으로 오름차순정렬
+		//7. 검색 값이 정규식에 부합하는지 판단함
+		if(flag.equalsIgnoreCase("checkout_id")) {
+			if(!RegexUtil.checkRegex(search, RegexUtil.UUID_REGEX)) {
+				throw new CustomException(ErrorCode.UUID_NOT_MATCHED_TO_REGEX);
+			}
+		}else if(flag.equalsIgnoreCase("book_isbn")) {
+			if(!RegexUtil.checkRegex(search, RegexUtil.BOOK_ISBN_REGEX)) {
+				throw new CustomException(ErrorCode.BOOK_ISBN_NOT_MATCHED_TO_REGEX);
+			}
+		}else if(flag.equalsIgnoreCase("book_translators")) {
+			if(!RegexUtil.checkRegex(search, RegexUtil.BOOK_TRANSLATOR_NAME_REGEX)) {
+				throw new CustomException(ErrorCode.TRANSLATOR_NAME_NOT_MATCHED_TO_REGEX);
+			}
+		}else if(flag.equalsIgnoreCase("book_authors")) {
+			if(!RegexUtil.checkRegex(search, RegexUtil.BOOK_AUTHOR_NAME_REGEX)) {
+				throw new CustomException(ErrorCode.AUTHOR_NAME_NOT_MATCHED_TO_REGEX);
+			}
+		}else if(flag.equalsIgnoreCase("book_type_content")) {
+			if(!RegexUtil.checkBytes(search, RegexUtil.BOOK_TYPE_CONTENT_MAXBYTES)) {
+				throw new CustomException(ErrorCode.BOOK_TYPE_CONTENT_EXCEEDED_LIMIT_IN_MAXBYTES);
+			}
+		}else if(flag.equalsIgnoreCase("book_publisher")) {
+			if(!RegexUtil.checkRegex(search, RegexUtil.BOOK_PUBLISHER_NAME_REGEX)) {
+				throw new CustomException(ErrorCode.PUBLISHER_NAME_NOT_MATCHED_TO_REGEX);
+			}
+		}else if(flag.equalsIgnoreCase("book_name")) {
+			if(!RegexUtil.checkBytes(search, RegexUtil.BOOK_NAME_MAXBYTES)) {
+				throw new CustomException(ErrorCode.BOOK_NAME_EXCEEDED_LIMIT_ON_MAXBYTES);
+			}
+		}
+		
+		//8. 정렬방식이 오름차순, 내림차순인지 확인함. 기본적으로 오름차순정렬
 		String sort = "ASC";
 		if(param.get("sort")!=null) {
 			if(((String)param.get("sort")).equalsIgnoreCase("A")) {
@@ -681,7 +702,7 @@ public class UserServiceImpl implements UserService {
 		}
 		param.put("sort", sort);
 		
-		//4. size는 마음대로 10 ~ 100사이로, 기본 10
+		//9. size는 마음대로 10 ~ 100사이로, 기본 10
 		int size = 10;
 		
 		if(param.get("size")!=null) {
@@ -696,7 +717,7 @@ public class UserServiceImpl implements UserService {
 		}
 		param.put("size", size);
 		
-		//2. page는 1이 기본
+		//10. page는 1이 기본
 		int page = 1;
 		
 		if(param.get("page")!=null) {
@@ -707,24 +728,24 @@ public class UserServiceImpl implements UserService {
 			}
 		}
 		
-		//4. 페이징 최대 크기를 구함
+		//11. 페이징 최대 크기를 구함
 		int max_page = (int) Math.ceil(userDAO.getCheckoutTotal(param)*1.0/size);
 		if(max_page==0) {
 			max_page=1;
 		}
 		
-		//5. 페이지 번호가 적절한 범위 내에 있는지 확인함
+		//12. 페이지 번호가 적절한 범위 내에 있는지 확인함
 		if(page<=0||page>max_page) {
 			throw new CustomException(ErrorCode.PAGE_OUT_OF_RANGE);
 		}else {
 			param.put("offset", (page-1)*size);
 		}
 		
-		//5. 대출 정보를 조회함.
+		//13. 대출 정보를 조회함.
 		List<HashMap> checkouts = userDAO.readCheckOutInfosWithOptions(param);
 		List<HashMap> list = new LinkedList<HashMap>();
 		
-		//6. 조회한 대출 정보를 가공함.
+		//14. 조회한 대출 정보를 가공함.
 		for(HashMap temp : checkouts) {
 			HashMap book = new HashMap();
 			book.put("book_isbn", temp.get("book_isbn"));
@@ -761,7 +782,6 @@ public class UserServiceImpl implements UserService {
 			checkout.put("checkout_renew_count", temp.get("checkout_renew_count"));
 			checkout.put("book", book);
 			
-			
 			list.add(checkout);
 		}
 		HashMap result = new HashMap();
@@ -771,6 +791,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	//예약 정보 조회 요청을 처리하는 메소드
 	public List<HashMap> readReservationInfo(HttpServletRequest request, HashMap param) {
 		//1. 해당 회원정보가 DB에 실제로 존재하는지 확인함.
 		HashMap user = userDAO.readUserInfo(param);								
@@ -833,6 +854,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	//대출 기한 연장 요청을 처리하는 메소드
 	public void updateCheckoutInfo(HttpServletRequest request, HashMap param) {
 		//1. 해당 회원정보가 DB에 실제로 존재하는지 확인함.
 		HashMap user = userDAO.readUserInfo(param);								
@@ -885,6 +907,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	//비밀번호 찾기 질문 목록 발급 요청을 처리하는 메소드
 	public List<HashMap> readQuestions() {
 		return userDAO.readQuestions();
 	}

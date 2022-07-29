@@ -24,6 +24,7 @@ public class TokenController {
 	@Autowired
 	private TokenService tokenService;
 	
+	//1. 토큰 발급 요청
 	@RequestMapping(value = "/tokens",method = RequestMethod.POST)
 	public ResponseEntity<HashMap> createNewTokens(HttpServletResponse response, @RequestBody HashMap<String,String> param){
 		HashMap result = new HashMap();
@@ -37,6 +38,7 @@ public class TokenController {
 		return new ResponseEntity<HashMap>(result,HttpStatus.CREATED);
 	}
 	
+	//2. 토큰 갱신 요청
 	@RequestMapping(value = "/tokens",method = RequestMethod.PUT)
 	public ResponseEntity<HashMap> updateTokens(HttpServletRequest request, HttpServletResponse response){
 		HashMap result = new HashMap();
@@ -53,6 +55,7 @@ public class TokenController {
 		return new ResponseEntity<HashMap>(result,HttpStatus.OK);
 	}
 	
+	//3. 토큰 삭제 요청
 	@RequestMapping(value = "/tokens",method = RequestMethod.DELETE)
 	public ResponseEntity<HashMap> deleteTokens(HttpServletRequest request){
 		HashMap result = new HashMap();

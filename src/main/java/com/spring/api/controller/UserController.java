@@ -22,7 +22,7 @@ public class UserController {
 	@Autowired
 	private UserService userService;
 	
-	//1. 공개키 발급, 현재 사용하지 않음
+	//1. 공개키 발급 요청(미사용)
 	/*
 	@RequestMapping(value="/users/publickeys",method=RequestMethod.GET)
 	public ResponseEntity<HashMap> createNewUserKeys() throws CustomException, Exception {
@@ -34,7 +34,7 @@ public class UserController {
 	}
 	*/
 	
-	//2. 회원가입
+	//2. 회원가입 요청
 	@RequestMapping(value="/users",method=RequestMethod.POST)
 	public ResponseEntity<HashMap> createNewUserInfo(@RequestBody HashMap param){
 		HashMap result = new HashMap();
@@ -44,7 +44,7 @@ public class UserController {
 		return new ResponseEntity<HashMap>(result,HttpStatus.CREATED);
 	}
 	
-	//3. 회원정보 조회
+	//3. 회원정보 조회 요청
 	@RequestMapping(value="/users/{user_id}",method=RequestMethod.GET)
 	public ResponseEntity<HashMap> readUserInfo(HttpServletRequest request, @PathVariable(value="user_id") String user_id){
 		HashMap result = new HashMap();
@@ -55,7 +55,7 @@ public class UserController {
 		return new ResponseEntity<HashMap>(result,HttpStatus.OK);
 	}
 	
-	//4. 회원정보 변경
+	//4. 회원정보 변경 요청
 	@RequestMapping(value="/users/{user_id}",method={RequestMethod.PUT})
 	public ResponseEntity<HashMap> updateUserInfo(HttpServletRequest request, @RequestBody HashMap param, @PathVariable("user_id") String target_user_id){
 		HashMap result = new HashMap();
@@ -66,7 +66,7 @@ public class UserController {
 		return new ResponseEntity<HashMap>(result,HttpStatus.OK);
 	}
 	
-	//5. 회원탈퇴(미구현)
+	//5. 회원탈퇴 요청(미구현)
 	@RequestMapping(value="/users",method={RequestMethod.DELETE})
 	public ResponseEntity<HashMap> deleteUserInfo(@RequestBody HashMap param){
 		HashMap result = new HashMap();
@@ -75,7 +75,7 @@ public class UserController {
 		return new ResponseEntity<HashMap>(result,HttpStatus.OK);
 	}
 	
-	//6. 도서대출
+	//6. 도서대출 요청
 	@RequestMapping(value="/users/{user_id}/checkouts",method={RequestMethod.POST})
 	public ResponseEntity<HashMap> createCheckoutInfo(HttpServletRequest request, @RequestBody HashMap param, @PathVariable("user_id") String user_id){
 		HashMap result = new HashMap();
@@ -86,7 +86,7 @@ public class UserController {
 		return new ResponseEntity<HashMap>(result,HttpStatus.CREATED);
 	}
 	
-	//7. 도서반납
+	//7. 도서반납 요청
 	@RequestMapping(value="/users/{user_id}/checkouts/{checkout_id}",method={RequestMethod.DELETE})
 	public ResponseEntity<HashMap> deleteCheckoutInfo(HttpServletRequest request, @PathVariable("user_id") String user_id, @PathVariable("checkout_id") String checkout_id){
 		HashMap result = new HashMap();
@@ -99,7 +99,7 @@ public class UserController {
 		return new ResponseEntity<HashMap>(result,HttpStatus.OK);
 	}
 	
-	//8. 도서예약
+	//8. 도서예약 요청
 	@RequestMapping(value="/users/{user_id}/reservations",method={RequestMethod.POST})
 	public ResponseEntity<HashMap> createNewReservationInfo(HttpServletRequest request, @RequestBody HashMap param, @PathVariable("user_id") String user_id){
 		HashMap result = new HashMap();
@@ -110,7 +110,7 @@ public class UserController {
 		return new ResponseEntity<HashMap>(result,HttpStatus.OK);
 	}
 	
-	//8. 도서예약 취소
+	//8. 도서예약 취소 요청
 	@RequestMapping(value="/users/{user_id}/reservations/{reservation_id}",method={RequestMethod.DELETE})
 	public ResponseEntity<HashMap> deleteReservationInfo(HttpServletRequest request, @PathVariable("user_id") String user_id, @PathVariable("reservation_id") String reservation_id){
 		HashMap result = new HashMap();
@@ -123,7 +123,7 @@ public class UserController {
 		return new ResponseEntity<HashMap>(result,HttpStatus.OK);
 	}
 	
-	//9. 대출현황 조회
+	//9. 대출현황 조회 요청
 	@RequestMapping(value="/users/{user_id}/checkouts",method={RequestMethod.GET})
 	public ResponseEntity<HashMap> readCheckoutInfo(HttpServletRequest request, @RequestParam HashMap param, @PathVariable("user_id") String user_id){
 		param.put("user_id", user_id);
@@ -134,7 +134,7 @@ public class UserController {
 		return new ResponseEntity<HashMap>(result,HttpStatus.OK);
 	}
 	
-	//10. 예약현황 조회
+	//10. 예약현황 조회 요청
 	@RequestMapping(value="/users/{user_id}/reservations",method={RequestMethod.GET})
 	public ResponseEntity<HashMap> readReservationInfo(HttpServletRequest request,@RequestParam HashMap param, @PathVariable("user_id") String user_id){
 		HashMap result = new HashMap();
@@ -146,7 +146,7 @@ public class UserController {
 		return new ResponseEntity<HashMap>(result,HttpStatus.OK);
 	}
 	
-	//11. 대출연장
+	//11. 대출연장 요청
 	@RequestMapping(value="/users/{user_id}/checkouts/{checkout_id}",method={RequestMethod.PUT})
 	public ResponseEntity<HashMap> updateCheckoutInfo(HttpServletRequest request,@PathVariable("user_id") String user_id, @PathVariable("checkout_id") String checkout_id){
 		HashMap result = new HashMap();
@@ -159,7 +159,7 @@ public class UserController {
 		return new ResponseEntity<HashMap>(result,HttpStatus.OK);
 	}
 	
-	//12. 비밀번호 찾기 질문 목록 발급
+	//12. 비밀번호 찾기 질문 조회 요청
 	@RequestMapping(value="/users/questions",method={RequestMethod.GET})
 	public ResponseEntity<HashMap> readQuestions(){
 		HashMap result = new HashMap();

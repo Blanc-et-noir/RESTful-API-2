@@ -36,19 +36,10 @@ public class TokenServiceImpl implements TokenService{
 	@Autowired
 	private UserDAO userDAO;
 	
+	//토큰 발급 요청을 처리하는 메소드
 	public HashMap createNewTokens(HashMap param) {
-		
 		String user_id = (String) param.get("user_id");
 		String user_pw = (String) param.get("user_pw");
-		//String user_publickey = (String) param.get("user_publickey");
-		//String user_privatekey = null;
-		
-		//공개키가 유효하지 않으면 공개키 유효성 불충족 예외 발생
-		//if((user_privatekey = (String) redisUtil.getData(user_publickey))==null) {
-			//throw new CustomException(ErrorCode.INVALID_PUBLICKEY);
-		//}
-		
-		//user_pw = RSA2048.decrypt(user_pw, user_privatekey);
 		HashMap<String,Object> user = null;
 		
 		//1. 아이디가 정규식에 적합하다면 실제로 존재하는 아이디인지 확인, 없으면 예외
@@ -111,6 +102,7 @@ public class TokenServiceImpl implements TokenService{
 		return result;		
 	}
 
+	//토큰 갱신 요청을 처리하는 메소드
 	public HashMap updateTokens(HttpServletRequest request) {
 		//1. 해당 사용자의 액세스, 리프레쉬 토큰을 얻음.
 		String user_accesstoken = jwtUtil.getAccesstoken(request);
@@ -144,6 +136,7 @@ public class TokenServiceImpl implements TokenService{
 		return result;
 	}
 
+	//토큰 삭제 요청을 처리하는 메소드
 	public void deleteTokens(HttpServletRequest request){
 		String user_accesstoken = jwtUtil.getAccesstoken(request);
 		String user_refreshtoken = jwtUtil.getRefreshtoken(request);
@@ -153,6 +146,7 @@ public class TokenServiceImpl implements TokenService{
 		HashMap param = new HashMap();
 		param.put("user_id", user_id);
 		
+		//1. 해당 사용자가 실제로 존재하는지 확인함
 		HashMap user = tokenDAO.getUserInfoByUserId(param);
 		
 		if(user==null) {
@@ -165,6 +159,7 @@ public class TokenServiceImpl implements TokenService{
 			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
 		}
 		
+		//2. 토큰을 실제로 로그아웃 처리함
 		long user_accesstoken_exp = jwtUtil.getExpiration(user_accesstoken);
 		long user_refreshtoken_exp = jwtUtil.getExpiration(user_refreshtoken);
 		
