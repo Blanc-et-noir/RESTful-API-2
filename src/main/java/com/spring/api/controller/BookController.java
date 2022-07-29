@@ -22,6 +22,7 @@ public class BookController {
 	@Autowired
 	private BookService bookService;
 	
+	//1. 신규 도서 등록 요청
 	@RequestMapping(value= {"/books"}, method= {RequestMethod.POST})
 	public ResponseEntity<HashMap> createNewBookInfo(MultipartRequest mRequest, HttpServletRequest request){
 		HashMap result = new HashMap();
@@ -31,6 +32,7 @@ public class BookController {
 		return new ResponseEntity<HashMap>(result,HttpStatus.CREATED);
 	}
 	
+	//2. 도서 목록 조회 요청
 	@RequestMapping(value= {"/books"}, method= {RequestMethod.GET})
 	public ResponseEntity<HashMap> readBooks(@RequestParam HashMap<String,String> param){
 		HashMap result = bookService.readBooks(param);
@@ -39,6 +41,7 @@ public class BookController {
 		return new ResponseEntity<HashMap>(result,HttpStatus.OK);
 	}
 	
+	//3. 도서 장르 조회 요청
 	@RequestMapping(value= {"/books/book_types"}, method= {RequestMethod.GET})
 	public ResponseEntity<HashMap> readBookTypes(){
 		HashMap result = new HashMap();
@@ -48,6 +51,7 @@ public class BookController {
 		return new ResponseEntity<HashMap>(result,HttpStatus.OK);
 	}
 	
+	//4. 신규 도서 장르 등록 요청
 	@RequestMapping(value= {"/books/book_types"}, method= {RequestMethod.POST})
 	public ResponseEntity<HashMap> createNewBookTypes(HttpServletRequest request, @RequestBody HashMap param){
 		HashMap result = new HashMap();
@@ -57,6 +61,7 @@ public class BookController {
 		return new ResponseEntity<HashMap>(result,HttpStatus.CREATED);
 	}
 	
+	//5. 도서 장르 수정 요청
 	@RequestMapping(value= {"/books/book_types/{book_type_id}"}, method= {RequestMethod.PUT})
 	public ResponseEntity<HashMap> updateBookTypes(HttpServletRequest request, @RequestBody HashMap param, @PathVariable("book_type_id") String book_type_id){
 		HashMap result = new HashMap();
@@ -67,6 +72,7 @@ public class BookController {
 		return new ResponseEntity<HashMap>(result,HttpStatus.OK);
 	}
 	
+	//6. 도서 장르 삭제 요청
 	@RequestMapping(value= {"/books/book_types/{book_type_id}"}, method= {RequestMethod.DELETE})
 	public ResponseEntity<HashMap> deleteBookTypes(HttpServletRequest request, @PathVariable("book_type_id") String book_type_id){
 		HashMap result = new HashMap();

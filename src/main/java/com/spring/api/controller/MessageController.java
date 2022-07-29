@@ -25,7 +25,7 @@ public class MessageController {
 	private MessageService messageService;
 	
 	
-	//1. 메세지 송신
+	//1. 메세지 송신 요청
 	@RequestMapping(value = "/users/{user_id}/messages",method = RequestMethod.POST)
 	public ResponseEntity<HashMap> createNewMessage(HttpServletRequest request, @RequestBody HashMap<String,String> param, @PathVariable("user_id") String user_id){
 		HashMap result = new HashMap();
@@ -36,7 +36,7 @@ public class MessageController {
 		return new ResponseEntity<HashMap>(result,HttpStatus.CREATED);
 	}
 	
-	//2. 메세지 조회
+	//2. 메세지 조회 요청
 	@RequestMapping(value = "/users/{user_id}/messages",method = RequestMethod.GET)
 	public ResponseEntity<HashMap> readMessages(HttpServletRequest request, @RequestParam HashMap<String,String> param, @PathVariable("user_id") String user_id){
 		param.put("user_id", user_id);
@@ -46,7 +46,7 @@ public class MessageController {
 		return new ResponseEntity<HashMap>(result,HttpStatus.OK);
 	}
 	
-	//3. 메세지 삭제
+	//3. 메세지 삭제 요청
 	@RequestMapping(value = "/users/{user_id}/messages/{message_id}",method = RequestMethod.DELETE)
 	public ResponseEntity<HashMap> deleteMessages(HttpServletRequest request, @PathVariable("user_id") String user_id,  @PathVariable("message_id") String message_id){
 		HashMap result = new HashMap();

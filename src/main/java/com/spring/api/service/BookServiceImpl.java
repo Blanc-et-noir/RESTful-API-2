@@ -76,7 +76,7 @@ public class BookServiceImpl implements BookService{
 			throw new CustomException(ErrorCode.PUBLISHER_NAME_NOT_MATCHED_TO_REGEX);
 		}
 		
-		//6. 재고의 유효성을 판단함.
+		//5. 재고의 유효성을 판단함.
 		Integer book_quantity;
 		try{
 			book_quantity = Integer.parseInt(request.getParameter("book_quantity"));
@@ -87,7 +87,7 @@ public class BookServiceImpl implements BookService{
 			throw new CustomException(ErrorCode.BOOK_QUANTITY_NOT_MATCHED_TO_REGEX);
 		}
 		
-		//7. 도서 장르의 유효성을 판단함.
+		//6. 도서 장르의 유효성을 판단함.
 		String book_type_id = request.getParameter("book_type_id");
 		if(!RegexUtil.checkRegex(book_type_id, RegexUtil.UUID_REGEX)) {
 			throw new CustomException(ErrorCode.UUID_NOT_MATCHED_TO_REGEX);
@@ -100,7 +100,7 @@ public class BookServiceImpl implements BookService{
 			throw new CustomException(ErrorCode.NOT_FOUND_BOOK_TYPE);
 		}
 		
-		//4. 저자 이름의 유효성을 판단함.
+		//7. 저자 이름의 유효성을 판단함.
 		String[] authors = request.getParameterValues("book_authors");
 				
 		if(authors == null||authors.length==0) {
@@ -122,7 +122,7 @@ public class BookServiceImpl implements BookService{
 			}
 		}
 		
-		//5. 번역자 이름의 유효성을 판단함.
+		//8. 번역자 이름의 유효성을 판단함.
 		String[] translators = request.getParameterValues("book_translators");
 		String book_translators = "";
 		
@@ -139,7 +139,7 @@ public class BookServiceImpl implements BookService{
 			}
 		}
 
-		//8. 도서 정보를 추가함.
+		//9. 도서 정보를 추가함.
 		param = new HashMap();
 		param.put("book_isbn", book_isbn);
 		param.put("book_name", book_name);
@@ -165,7 +165,7 @@ public class BookServiceImpl implements BookService{
 			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
 		}
 
-		//9. 도서 이미지 정보를 추가함.
+		//10. 도서 이미지 정보를 추가함.
 		List<MultipartFile> mfiles = mRequest.getFiles("book_images");
 		List<HashMap> list = new LinkedList<HashMap>();
 		
@@ -191,7 +191,7 @@ public class BookServiceImpl implements BookService{
 			row = bookDAO.createNewBookImageInfo(param);
 		}
 		
-		//10. 실제로 이미지 파일을 저장함.
+		//11. 실제로 이미지 파일을 저장함.
 		Iterator<HashMap> itr = list.iterator();
 		
 		try {
@@ -211,11 +211,13 @@ public class BookServiceImpl implements BookService{
 	}
 	
 	@Override
+	//도서 장르 조회 요청을 처리하는 메소드
 	public List readBookTypes() {
 		return bookDAO.readBookTypes();
 	}
 	
 	@Override
+	//도서 장르 등록 요청을 처리하는 메소드
 	public void createNewBookTypes(HttpServletRequest request, HashMap param) {
 		//1. 해당 사용자가 권한이 있는지 확인
 		String user_accesstoken = jwtUtil.getAccesstoken(request);
@@ -236,7 +238,7 @@ public class BookServiceImpl implements BookService{
 		//2. 도서 장르 이름의 유효성을 판단함.
 		String book_type_content = (String) param.get("book_type_content");
 		if(!RegexUtil.checkBytes(book_type_content,RegexUtil.BOOK_TYPE_CONTENT_MAXBYTES)) {
-			throw new CustomException(ErrorCode.BOOK_CONTENT_TYPE_EXCEEDED_LIMIT_IN_MAXBYTES);
+			throw new CustomException(ErrorCode.BOOK_TYPE_CONTENT_EXCEEDED_LIMIT_IN_MAXBYTES);
 		}
 		
 		//3. 도서 장르를 새로 추가함.
@@ -248,6 +250,7 @@ public class BookServiceImpl implements BookService{
 	}
 
 	@Override
+	//도서 정보 수정 요청을 처리하는 메소드
 	public void updateBookTypes(HttpServletRequest request, HashMap param) {
 		//1. 해당 사용자가 권한이 있는지 확인
 		String user_accesstoken = jwtUtil.getAccesstoken(request);
@@ -268,7 +271,7 @@ public class BookServiceImpl implements BookService{
 		//2. 도서 장르 이름의 유효성을 판단함.
 		String book_type_content = (String) param.get("book_type_content");
 		if(!RegexUtil.checkBytes(book_type_content,RegexUtil.BOOK_TYPE_CONTENT_MAXBYTES)) {
-			throw new CustomException(ErrorCode.BOOK_CONTENT_TYPE_EXCEEDED_LIMIT_IN_MAXBYTES);
+			throw new CustomException(ErrorCode.BOOK_TYPE_CONTENT_EXCEEDED_LIMIT_IN_MAXBYTES);
 		}
 		
 		//3. 도서 장르가 존재하는지 판단함.
@@ -370,10 +373,24 @@ public class BookServiceImpl implements BookService{
 			if(!RegexUtil.checkRegex(search,RegexUtil.BOOK_PUBLISHER_NAME_REGEX)) {
 				throw new CustomException(ErrorCode.PUBLISHER_NAME_NOT_MATCHED_TO_REGEX);
 			}
+		}else if(flag.equalsIgnoreCase("book_authors")) {
+			if(!RegexUtil.checkRegex(search,RegexUtil.BOOK_AUTHOR_NAME_REGEX)) {
+				throw new CustomException(ErrorCode.AUTHOR_NAME_NOT_MATCHED_TO_REGEX);
+			}
+		}else if(flag.equalsIgnoreCase("book_translators")) {
+			if(!RegexUtil.checkRegex(search,RegexUtil.BOOK_TRANSLATOR_NAME_REGEX)) {
+				throw new CustomException(ErrorCode.TRANSLATOR_NAME_NOT_MATCHED_TO_REGEX);
+			}
+		}else if(flag.equalsIgnoreCase("book_type_content")) {
+			if(!RegexUtil.checkBytes(search,RegexUtil.BOOK_TYPE_CONTENT_MAXBYTES)) {
+				throw new CustomException(ErrorCode.BOOK_TYPE_CONTENT_EXCEEDED_LIMIT_IN_MAXBYTES);
+			}
 		}
+		
+		
 		param.put("search", search);
 		
-		//4. 정렬방식이 오름차순, 내림차순인지 확인함. 기본적으로 오름차순정렬
+		//5. 정렬방식이 오름차순, 내림차순인지 확인함. 기본적으로 오름차순정렬
 		String sort = "ASC";
 		if(param.get("sort")!=null) {
 			if(sort.equalsIgnoreCase("ASC")||sort.equalsIgnoreCase("DESC")) {
@@ -384,13 +401,13 @@ public class BookServiceImpl implements BookService{
 		}
 		param.put("sort", sort);
 		
-		//5. 페이징 최대 크기를 구함
+		//6. 페이징 최대 크기를 구함
 		int max_page = (int) Math.ceil(bookDAO.getBookTotal(param)*1.0/size);
 		if(max_page==0) {
 			max_page=1;
 		}
 		
-		//6. 페이지 번호가 적절한 범위 내에 있는지 확인함
+		//7. 페이지 번호가 적절한 범위 내에 있는지 확인함
 		if(page<=0||page>max_page) {
 			throw new CustomException(ErrorCode.PAGE_OUT_OF_RANGE);
 		}else {
@@ -398,7 +415,7 @@ public class BookServiceImpl implements BookService{
 		}
 		param.put("page", page);
 		
-		//7. 도서 목록을 조회함
+		//8. 도서 목록을 조회함
 		List<HashMap> books = bookDAO.readBooks(param);
 		Iterator<HashMap> itor = books.iterator();
 		

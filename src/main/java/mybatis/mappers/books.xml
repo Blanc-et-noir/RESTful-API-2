@@ -41,10 +41,10 @@
 		<if test='flag.equalsIgnoreCase("book_publisher")'>
 			WHERE book_publisher LIKE CONCAT('%', #{search}, '%')
 		</if>
-		<if test='flag.equalsIgnoreCase("book_author")'>
+		<if test='flag.equalsIgnoreCase("book_authors")'>
 			WHERE book_authors LIKE CONCAT('%', #{search}, '%')
 		</if>
-		<if test='flag.equalsIgnoreCase("book_translator")'>
+		<if test='flag.equalsIgnoreCase("book_translators")'>
 			WHERE book_translators LIKE CONCAT('%', #{search}, '%')
 		</if>
 		<if test='flag.equalsIgnoreCase("book_type_content")'>
