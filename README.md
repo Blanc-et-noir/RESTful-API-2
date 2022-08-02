@@ -122,7 +122,7 @@
 <br>
 
 <details>
-<summary>추후작성</summary>
+<summary>도서 등록 요구사항</summary>
 
 <br>
 
@@ -133,7 +133,7 @@
 <br>
 
 <details>
-<summary>추후작성</summary>
+<summary>도서 리뷰 요구사항</summary>
 
 <br>
 
@@ -142,38 +142,6 @@
 </details>
 
 <br>
-
-<details>
-<summary>추후작성</summary>
-
-<br>
-
-* **[기능]** 추후작성
-
-</details>
-
-<br>
-
-<details>
-<summary>추후작성</summary>
-
-<br>
-
-* **[기능]** 추후작성
-
-</details>
-
-<br>
-
-<details>
-<summary>추후작성</summary>
-
-<br>
-
-* **[기능]** 추후작성
-
-</details>
-<hr>
 
 ### [기술 스택]
 1. Java
