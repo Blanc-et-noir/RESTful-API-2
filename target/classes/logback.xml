@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ %m : 로그내용
+ %p : trace > debug > info > warn > error 우선순위 출력
+ %r : 앱 시작부터 로깅 발생까지의 경과시간 ms단위 출력
+ %c : 카테고리가 a.b.c 이면 %c{2}는 b.c 출력
+ %n : 플랫폼 종속적인 개행문자 출력. \r\n 또는 \n
+ %d : 로깅 날짜
+     %d{HH:mm:ss} 또는 %d{YYYY-MM-dd HH:mm:ss}
+     
+ %C : 호출자의 클래스명 출력
+ 	  org.apache.xyz.SomeClass 처럼 되어있다면 %C{2}는 xyz.SomeClass 출력
+ 
+ %M : 로깅 발생 메소드
+ %F : 로깅 발생 프로그램 파일
+ %l : 로깅 발생 caller 정보
+ %L : 로깅 발생 caller 라인수 
+ %x : 로깅이 발생한 쓰레드 NDC
+ %X : 로깅이 발생한 쓰레드 MDC
+ %% : % 표시 
+ %t : 로그이벤트가 발생된 쓰레드 이름 출력
+-->
+<configuration scan="true" scanPeriod="30 seconds">
+    
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>/home/tomcat9/logs/api/server-log.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>10MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <!--<Pattern>[%-5level] - %d{YYYY-MM-dd HH:mm:ss} - %msg%n</Pattern>-->
+            <Pattern>%m</Pattern>
+        </encoder>
+    </appender>
+    
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <!--<Pattern>[%-5level] - %d{YYYY-MM-dd HH:mm:ss} - %msg%n</Pattern>-->
+            <Pattern>%m</Pattern>
+        </layout>
+    </appender>
+
+    <logger name="com.spring.api.interceptor.LogInterceptor" level="info" >
+        <appender-ref ref="FILE"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+</configuration>

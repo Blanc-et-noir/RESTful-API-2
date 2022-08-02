@@ -39,6 +39,10 @@
 	<mvc:interceptors>
 		<mvc:interceptor>
 			<mvc:mapping path="/**"/>
+			<beans:bean class="com.spring.api.interceptor.LogInterceptor"/>
+		</mvc:interceptor>
+		<mvc:interceptor>
+			<mvc:mapping path="/**"/>
 			<mvc:exclude-mapping path="/tokens/**"/>
 			<beans:bean class="com.spring.api.interceptor.AccesstokenInterceptor"/>
 		</mvc:interceptor>
